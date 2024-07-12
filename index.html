@@ -63,8 +63,8 @@
     </div>
 
     <script>
-        const API_KEY = 'sk-proj-2ZlIvabNxLY0sxkgKzsKT3BlbkFJqwU0iJZA5OcsCfRBe6DU'; // Replace with your actual API key
-        const API_URL = 'https://api.openai.com/v1/chat/completions';
+        // Replace with your actual backend URL
+        const BACKEND_URL = 'https://your-backend-service.com/api';
 
         let businessPlanContext = '';
 
@@ -90,44 +90,18 @@
             loadingIcon.classList.remove('hidden');
 
             try {
-                const prompt = `Create a comprehensive and detailed business plan for a ${businessIdea} in ${location}. Include the following sections:
-
-1. Executive Summary
-2. Business Description
-3. Products or Services
-4. Market Analysis
-5. Marketing and Sales Strategy
-6. Operations Plan
-7. Management Team
-8. Financial Projections
-9. Funding Requirements
-10. Legal and Regulatory Considerations
-
-For each section:
-- Provide a concise overview with key points.
-- Use bullet points for clarity when listing steps or key points.
-- Ensure all financial projections and market data are realistic and consistent throughout the plan.
-- Be creative but sensible with the numbers provided.`;
-
-                const response = await fetch(API_URL, {
+                const response = await fetch(`${BACKEND_URL}/generate-plan`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${API_KEY}`
                     },
-                    body: JSON.stringify({
-                        model: 'gpt-3.5-turbo',
-                        messages: [{ role: 'user', content: prompt }],
-                        max_tokens: 2000,
-                        temperature: 0.7
-                    })
+                    body: JSON.stringify({ businessIdea, location })
                 });
 
                 const data = await response.json();
-                const businessPlan = data.choices[0].message.content;
-                businessPlanContext = businessPlan;
+                businessPlanContext = data.businessPlan;
 
-                displayBusinessPlan(businessPlan, businessIdea, location);
+                displayBusinessPlan(data.businessPlan, businessIdea, location);
                 document.getElementById('result').classList.remove('hidden');
             } catch (error) {
                 console.error('Error:', error);
@@ -168,36 +142,21 @@ For each section:
                         expandBtn.textContent = 'Loading...';
                         expandBtn.disabled = true;
 
-                        const detailedPrompt = `For the "${title.trim()}" section of the business plan for a ${businessIdea} in ${location}, provide:
-
-1. More detailed explanation and step-by-step guidance
-2. Specific numerical estimates (e.g., costs, revenues, market sizes)
-3. Examples of required permits or licenses, if applicable
-4. Industry benchmarks or averages
-5. Potential challenges and how to overcome them
-6. Best practices and insider tips
-
-Be creative but realistic with the information and numbers provided. Use bullet points for clarity.`;
-
                         try {
-                            const response = await fetch(API_URL, {
+                            const response = await fetch(`${BACKEND_URL}/expand-section`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${API_KEY}`
                                 },
-                                body: JSON.stringify({
-                                    model: 'gpt-3.5-turbo',
-                                    messages: [{ role: 'user', content: detailedPrompt }],
-                                    max_tokens: 1000,
-                                    temperature: 0.7
+                                body: JSON.stringify({ 
+                                    businessIdea, 
+                                    location, 
+                                    sectionTitle: title.trim() 
                                 })
                             });
 
                             const data = await response.json();
-                            const detailedContent = data.choices[0].message.content;
-
-                            expandedContent.innerHTML = detailedContent.replace(/\n/g, '<br>');
+                            expandedContent.innerHTML = data.expandedContent.replace(/\n/g, '<br>');
                         } catch (error) {
                             console.error('Error:', error);
                             expandedContent.innerHTML = 'An error occurred while fetching detailed information. Please try again.';
@@ -229,34 +188,20 @@ Be creative but realistic with the information and numbers provided. Use bullet 
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
             try {
-                const prompt = `Based on the following business plan context:
-
-${businessPlanContext}
-
-Answer the following question about the business plan:
-${question}
-
-Provide a detailed and helpful response, using specific information from the business plan where relevant.`;
-
-                const response = await fetch(API_URL, {
+                const response = await fetch(`${BACKEND_URL}/chat`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${API_KEY}`
                     },
-                    body: JSON.stringify({
-                        model: 'gpt-3.5-turbo',
-                        messages: [{ role: 'user', content: prompt }],
-                        max_tokens: 500,
-                        temperature: 0.7
+                    body: JSON.stringify({ 
+                        question, 
+                        context: businessPlanContext 
                     })
                 });
 
                 const data = await response.json();
-                const aiResponse = data.choices[0].message.content;
-
                 // Update AI response
-                chatMessages.lastElementChild.innerHTML = `<div class="mb-2"><strong>AI:</strong> ${aiResponse}</div>`;
+                chatMessages.lastElementChild.innerHTML = `<div class="mb-2"><strong>AI:</strong> ${data.answer}</div>`;
             } catch (error) {
                 console.error('Error:', error);
                 chatMessages.lastElementChild.innerHTML = `<div class="mb-2"><strong>AI:</strong> I'm sorry, I encountered an error while processing your question. Please try again.</div>`;
