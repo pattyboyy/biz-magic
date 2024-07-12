@@ -28,7 +28,20 @@ app.post('/api/generate-plan', async (req, res) => {
     const { businessIdea, location } = req.body;
     console.log(`Generating plan for ${businessIdea} in ${location}`);
     
-    const prompt = `Create a comprehensive business plan for a ${businessIdea} in ${location}. Include sections on Executive Summary, Business Description, Products/Services, Market Analysis, Marketing Strategy, Operations Plan, Management Team, Financial Projections, Funding Requirements, and Legal Considerations.`;
+    const prompt = `Create a comprehensive business plan for a ${businessIdea} in ${location}. Include the following numbered sections:
+
+1. Executive Summary
+2. Business Description
+3. Products or Services
+4. Market Analysis
+5. Marketing and Sales Strategy
+6. Operations Plan
+7. Management Team
+8. Financial Projections
+9. Funding Requirements
+10. Legal and Regulatory Considerations
+
+For each section, provide a title and a brief overview. Ensure each section starts with its number and title on a new line.`;
     
     const completion = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",
@@ -47,7 +60,7 @@ app.post('/api/expand-section', async (req, res) => {
     const { businessIdea, location, sectionTitle } = req.body;
     console.log(`Expanding section ${sectionTitle} for ${businessIdea} in ${location}`);
     
-    const prompt = `Provide detailed information for the "${sectionTitle}" section of a business plan for a ${businessIdea} in ${location}. Include specific examples, numerical estimates, and actionable advice.`;
+    const prompt = `Provide detailed information for the "${sectionTitle}" section of a business plan for a ${businessIdea} in ${location}. Include specific examples, numerical estimates, actionable advice, and best practices. Be creative but realistic with the information and numbers provided.`;
     
     const completion = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",
@@ -66,7 +79,7 @@ app.post('/api/chat', async (req, res) => {
     const { question, context } = req.body;
     console.log(`Answering question: ${question}`);
     
-    const prompt = `Given the following business plan context:\n\n${context}\n\nAnswer the following question:\n${question}`;
+    const prompt = `Given the following business plan context:\n\n${context}\n\nAnswer the following question:\n${question}\n\nProvide a detailed and helpful response, using specific information from the business plan where relevant.`;
     
     const completion = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",

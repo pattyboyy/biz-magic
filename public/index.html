@@ -113,18 +113,21 @@
             const businessPlanElement = document.getElementById('businessPlan');
             businessPlanElement.innerHTML = '';
 
-            const sections = plan.split(/\d+\.\s/).filter(section => section.trim() !== '');
+            // Split the plan into sections
+            const sections = plan.split(/\d+\.\s+/).filter(section => section.trim() !== '');
 
             sections.forEach((section, index) => {
                 const sectionElement = document.createElement('div');
                 sectionElement.className = 'bg-white rounded-lg shadow-md p-4 mb-4';
 
-                const [title, ...content] = section.split('\n');
-                const sectionContent = content.join('\n').trim();
+                // Extract the title (first line) and content (rest of the section)
+                const lines = section.split('\n');
+                const title = lines[0].trim();
+                const content = lines.slice(1).join('\n').trim();
 
                 sectionElement.innerHTML = `
-                    <h3 class="text-xl font-semibold mb-2">${index + 1}. ${title.trim()}</h3>
-                    <div class="mb-2">${sectionContent.replace(/\n/g, '<br>')}</div>
+                    <h3 class="text-xl font-semibold mb-2">${index + 1}. ${title}</h3>
+                    <div class="mb-2">${content.replace(/\n/g, '<br>')}</div>
                     <button class="expand-btn bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300">Learn More</button>
                     <div class="expanded-content hidden mt-4 p-4 bg-gray-100 rounded"></div>
                 `;
