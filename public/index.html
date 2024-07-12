@@ -13,12 +13,33 @@
         .chat-container {
             height: 70vh;
         }
-        .fade-in-out {
-            opacity: 0;
-            transition: opacity 1s;
+        .ticker-container {
+            overflow: hidden;
+            position: relative;
+            height: 3rem; /* Adjust height as needed */
+            background-color: #ffffff;
         }
-        .fade-in-out.show {
-            opacity: 1;
+        .ticker {
+            display: inline-block;
+            white-space: nowrap;
+            position: absolute;
+            will-change: transform;
+            animation: ticker 15s linear infinite;
+        }
+        @keyframes ticker {
+            0% {
+                transform: translateX(100%);
+            }
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+        .ticker-item {
+            display: inline-block;
+            margin-right: 2rem;
+            font-size: 1.25rem;
+            color: #333;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -75,19 +96,19 @@
                     <h2 class="text-2xl font-bold mb-2">Trending Business Ideas Across the US</h2>
                     <p class="text-yellow-100">Explore these popular and profitable business concepts</p>
                 </div>
-                <div class="p-6">
-                    <ul id="trendingIdeas" class="list-disc pl-5 space-y-2 fade-in-out">
-                        <li>Sustainable and eco-friendly products</li>
-                        <li>Home fitness and wellness services</li>
-                        <li>Personalized meal prep and delivery</li>
-                        <li>Virtual event planning and management</li>
-                        <li>Remote work consulting and home office solutions</li>
-                        <li>Artificial Intelligence and Machine Learning services</li>
-                        <li>Cybersecurity for small businesses</li>
-                        <li>Sustainable fashion and upcycled clothing</li>
-                        <li>Mental health and telehealth platforms</li>
-                        <li>Subscription-based services (e.g., curated boxes, digital content)</li>
-                    </ul>
+                <div class="p-6 ticker-container">
+                    <div class="ticker">
+                        <div class="ticker-item">Sustainable and eco-friendly products</div>
+                        <div class="ticker-item">Home fitness and wellness services</div>
+                        <div class="ticker-item">Personalized meal prep and delivery</div>
+                        <div class="ticker-item">Virtual event planning and management</div>
+                        <div class="ticker-item">Remote work consulting and home office solutions</div>
+                        <div class="ticker-item">Artificial Intelligence and Machine Learning services</div>
+                        <div class="ticker-item">Cybersecurity for small businesses</div>
+                        <div class="ticker-item">Sustainable fashion and upcycled clothing</div>
+                        <div class="ticker-item">Mental health and telehealth platforms</div>
+                        <div class="ticker-item">Subscription-based services (e.g., curated boxes, digital content)</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -95,9 +116,6 @@
 
     <script>
         let businessPlanContext = '';
-        let currentIdeaIndex = 0;
-        const ideas = document.querySelectorAll('#trendingIdeas li');
-        const totalIdeas = ideas.length;
 
         document.getElementById('generateBtn').addEventListener('click', generateBusinessPlan);
         document.getElementById('sendBtn').addEventListener('click', sendMessage);
@@ -106,19 +124,6 @@
                 sendMessage();
             }
         });
-
-        function cycleIdeas() {
-            ideas.forEach((idea, index) => {
-                idea.classList.remove('show');
-                idea.style.display = 'none';
-            });
-            ideas[currentIdeaIndex].classList.add('show');
-            ideas[currentIdeaIndex].style.display = 'list-item';
-
-            currentIdeaIndex = (currentIdeaIndex + 1) % totalIdeas;
-        }
-
-        setInterval(cycleIdeas, 3000);
 
         async function generateBusinessPlan() {
             const businessIdea = document.getElementById('businessIdea').value;
@@ -256,9 +261,6 @@
 
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
-
-        // Start cycling ideas immediately
-        cycleIdeas();
     </script>
 </body>
 </html>
