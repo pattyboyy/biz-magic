@@ -13,6 +13,13 @@
         .chat-container {
             height: calc(100vh - 2rem);
         }
+        .fade-in-out {
+            opacity: 0;
+            transition: opacity 1s;
+        }
+        .fade-in-out.show {
+            opacity: 1;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-r from-blue-100 to-purple-100 min-h-screen p-4">
@@ -70,7 +77,7 @@
                 <p class="text-yellow-100">Explore these popular and profitable business concepts</p>
             </div>
             <div class="p-6">
-                <ul class="list-disc pl-5 space-y-2">
+                <ul id="trendingIdeas" class="list-disc pl-5 space-y-2 fade-in-out">
                     <li>Sustainable and eco-friendly products</li>
                     <li>Home fitness and wellness services</li>
                     <li>Personalized meal prep and delivery</li>
@@ -88,6 +95,9 @@
 
     <script>
         let businessPlanContext = '';
+        let currentIdeaIndex = 0;
+        const ideas = document.querySelectorAll('#trendingIdeas li');
+        const totalIdeas = ideas.length;
 
         document.getElementById('generateBtn').addEventListener('click', generateBusinessPlan);
         document.getElementById('sendBtn').addEventListener('click', sendMessage);
@@ -96,6 +106,19 @@
                 sendMessage();
             }
         });
+
+        function cycleIdeas() {
+            ideas.forEach((idea, index) => {
+                idea.classList.remove('show');
+                idea.style.display = 'none';
+            });
+            ideas[currentIdeaIndex].classList.add('show');
+            ideas[currentIdeaIndex].style.display = 'list-item';
+
+            currentIdeaIndex = (currentIdeaIndex + 1) % totalIdeas;
+        }
+
+        setInterval(cycleIdeas, 3000);
 
         async function generateBusinessPlan() {
             const businessIdea = document.getElementById('businessIdea').value;
