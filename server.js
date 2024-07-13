@@ -27,8 +27,8 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 // Middleware
-app.use(express.static('public'));
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Logging middleware
 app.use((req, res, next) => {
@@ -118,28 +118,11 @@ For each section, provide a title and a brief overview. Ensure each section star
       messages: [{ role: "user", content: prompt }],
     });
 
+    console.log('OpenAI API response:', completion.data);
+
     res.json({ businessPlan: completion.data.choices[0].message.content });
   } catch (error) {
     handleApiError(res, error, 'Error generating business plan');
-  }
-});
-
-// Expand section (protected route)
-app.post('/api/expand-section', authenticateToken, async (req, res) => {
-  try {
-    const { businessIdea, location, sectionTitle } = req.body;
-    console.log(`Expanding section ${sectionTitle} for ${businessIdea} in ${location}`);
-    
-    const prompt = `Provide detailed information for the "${sectionTitle}" section of a business plan for a ${businessIdea} in ${location}. Include specific examples, numerical estimates, actionable advice, and best practices. Be creative but realistic with the information and numbers provided.`;
-    
-    const completion = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
-      messages: [{ role: "user", content: prompt }],
-    });
-
-    res.json({ expandedContent: completion.data.choices[0].message.content });
-  } catch (error) {
-    handleApiError(res, error, 'Error expanding section');
   }
 });
 
@@ -156,13 +139,15 @@ app.post('/api/chat', authenticateToken, async (req, res) => {
       messages: [{ role: "user", content: prompt }],
     });
 
+    console.log('OpenAI API response:', completion.data);
+
     res.json({ answer: completion.data.choices[0].message.content });
   } catch (error) {
     handleApiError(res, error, 'Error processing chat question');
   }
 });
 
-// Trending business ideas (can be a protected route if needed)
+// Trending business ideas
 app.get('/api/trending-ideas', async (req, res) => {
   try {
     // This is a placeholder. In a real application, you might fetch this data from another API or database
@@ -177,6 +162,11 @@ app.get('/api/trending-ideas', async (req, res) => {
   } catch (error) {
     handleApiError(res, error, 'Error fetching trending ideas');
   }
+});
+
+// Test route
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'Server is running' });
 });
 
 // Catch-all route to serve index.html for any unmatched routes

@@ -37,6 +37,7 @@ let authToken = localStorage.getItem('authToken');
 function setAuthToken(token) {
     authToken = token;
     localStorage.setItem('authToken', token);
+    console.log('Auth token set:', authToken);
 }
 
 function clearAuthToken() {
@@ -74,7 +75,8 @@ generatePlanBtn.addEventListener('click', async function() {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to generate business plan');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to generate business plan');
         }
 
         const data = await response.json();
@@ -82,8 +84,8 @@ generatePlanBtn.addEventListener('click', async function() {
         businessPlanDiv.innerHTML = data.businessPlan;
         resultDiv.classList.remove('hidden');
     } catch (error) {
-        console.error('Error:', error);
-        alert('Failed to generate business plan. Please try again.');
+        console.error('Error generating business plan:', error);
+        alert(`Failed to generate business plan: ${error.message}`);
     } finally {
         loadingIcon.classList.add('hidden');
     }
@@ -126,15 +128,16 @@ async function sendChatMessage() {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to get answer');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to get answer');
         }
 
         const data = await response.json();
         
         displayMessage('Assistant', data.answer);
     } catch (error) {
-        console.error('Error:', error);
-        displayMessage('System', 'Failed to get an answer. Please try again.');
+        console.error('Error in chat:', error);
+        displayMessage('System', `Failed to get an answer: ${error.message}`);
     }
 
     chatInput.value = '';
@@ -229,7 +232,7 @@ function updateUIForLoggedInUser() {
     registerBtn.style.display = 'none';
     const logoutBtn = document.createElement('a');
     logoutBtn.href = '#';
-    logoutBtn.className = 'py-2 px-2 font-medium text-white bg-red-500 rounded hover:bg-red-400 transition duration-300';
+    logoutBtn.className = 'py-2 px-3 text-sm font-medium text-white bg-red-500 rounded hover:bg-red-400 transition duration-300';
     logoutBtn.textContent = 'Logout';
     logoutBtn.onclick = logout;
     registerBtn.parentNode.appendChild(logoutBtn);

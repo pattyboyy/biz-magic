@@ -5,118 +5,82 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Business Startup Helper</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.4);
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 500px;
-        }
-        .ticker {
-            white-space: nowrap;
-            overflow: hidden;
-        }
-        .ticker-content {
-            display: inline-block;
-            padding-left: 100%;
-            animation: ticker 30s linear infinite;
-        }
-        @keyframes ticker {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(-100%, 0); }
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-gray-100">
-    <nav class="bg-white shadow-lg">
+<body class="bg-gray-100 text-sm font-sans">
+    <nav class="bg-white shadow-md">
         <div class="max-w-6xl mx-auto px-4">
             <div class="flex justify-between">
-                <div class="flex space-x-7">
+                <div class="flex space-x-4">
                     <div>
-                        <a href="#" class="flex items-center py-4 px-2">
-                            <span class="font-semibold text-gray-500 text-lg">Business Startup Helper</span>
+                        <a href="#" class="flex items-center py-3 px-2">
+                            <span class="font-semibold text-gray-500 text-base">Business Startup Helper</span>
                         </a>
                     </div>
                 </div>
-                <div class="hidden md:flex items-center space-x-3">
-                    <a href="#" class="py-2 px-2 font-medium text-gray-500 rounded hover:bg-green-500 hover:text-white transition duration-300" id="loginBtn">Log In</a>
-                    <a href="#" class="py-2 px-2 font-medium text-white bg-green-500 rounded hover:bg-green-400 transition duration-300" id="registerBtn">Register</a>
+                <div class="hidden md:flex items-center space-x-1">
+                    <a href="#" id="loginBtn" class="py-2 px-3 text-sm font-medium text-gray-500 rounded hover:bg-green-500 hover:text-white transition duration-300">Log In</a>
+                    <a href="#" id="registerBtn" class="py-2 px-3 text-sm font-medium text-white bg-green-500 rounded hover:bg-green-400 transition duration-300">Register</a>
                 </div>
             </div>
         </div>
     </nav>
 
     <div class="container mx-auto flex flex-col md:flex-row gap-4 p-4">
-        <div class="w-full md:w-2/3 bg-white rounded-xl shadow-2xl overflow-hidden">
-            <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
-                <h1 class="text-3xl font-bold mb-2">Comprehensive Business Startup Helper</h1>
-                <p>Get a detailed plan with realistic projections for your business idea</p>
+        <div class="w-full md:w-2/3 bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-500 to-purple-500 p-4 text-white">
+                <h1 class="text-xl font-bold mb-2">Comprehensive Business Startup Helper</h1>
+                <p class="text-sm">Get a detailed plan with realistic projections for your business idea</p>
             </div>
-
-            <div class="p-8">
-                <div class="mb-6">
+            <div class="p-4">
+                <div class="mb-4">
                     <label for="businessType" class="block text-sm font-medium text-gray-700">What kind of business do you want to start?</label>
-                    <input type="text" id="businessType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                    <input type="text" id="businessType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
                 </div>
-
-                <div class="mb-6">
+                <div class="mb-4">
                     <label for="location" class="block text-sm font-medium text-gray-700">Location (City, State)</label>
-                    <input type="text" id="location" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                    <input type="text" id="location" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
                 </div>
-
-                <button id="generatePlan" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center justify-center">
+                <button id="generatePlan" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline text-sm transition duration-300">
                     Generate Business Plan
-                    <svg id="loadingIcon" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg id="loadingIcon" class="animate-spin ml-3 h-4 w-4 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                 </button>
             </div>
-
             <div id="result" class="hidden">
-                <div class="px-8 py-6 bg-gray-50 border-t border-gray-200">
-                    <h2 class="text-2xl font-semibold mb-4">Your Comprehensive Business Plan</h2>
-                    <div id="businessPlan" class="space-y-4"></div>
+                <div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
+                    <h2 class="text-lg font-semibold mb-2">Your Comprehensive Business Plan</h2>
+                    <div id="businessPlan" class="space-y-2 text-sm">
+                        <!-- Business plan content will be inserted here -->
+                    </div>
                 </div>
             </div>
         </div>
-
         <div class="w-full md:w-1/3 flex flex-col gap-4">
-            <div class="bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col">
-                <div class="bg-gradient-to-r from-green-600 to-teal-600 p-4 text-white">
-                    <h2 class="text-xl font-bold">Got specific questions about this plan?</h2>
-                    <p>Ask me anything!</p>
+            <div class="bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
+                <div class="bg-gradient-to-r from-green-500 to-teal-500 p-3 text-white">
+                    <h2 class="text-lg font-bold">Got specific questions about this plan?</h2>
+                    <p class="text-sm">Ask me anything!</p>
                 </div>
-
-                <div id="chatMessages" class="flex-grow p-4 overflow-y-auto h-64"></div>
-
-                <div class="p-4 border-t border-gray-200">
-                    <input type="text" id="chatInput" class="w-full px-3 py-2 border rounded-lg" placeholder="Type your question...">
-                    <button id="sendChat" class="mt-2 w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Send</button>
+                <div id="chatMessages" class="flex-grow p-3 overflow-y-auto h-48 text-sm">
+                    <!-- Chat messages will be inserted here -->
+                </div>
+                <div class="p-3 border-t border-gray-200">
+                    <input type="text" id="chatInput" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Type your question...">
+                    <button id="sendChat" class="mt-2 w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm transition duration-300">Send</button>
                 </div>
             </div>
-
-            <div class="bg-white rounded-xl shadow-2xl overflow-hidden">
-                <div class="bg-gradient-to-r from-yellow-400 to-orange-500 p-6 text-white">
-                    <h2 class="text-2xl font-bold mb-2">Trending Business Ideas Across the US</h2>
-                    <p>Explore these popular and profitable business concepts</p>
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="bg-gradient-to-r from-yellow-400 to-orange-500 p-3 text-white">
+                    <h2 class="text-lg font-bold mb-1">Trending Business Ideas Across the US</h2>
+                    <p class="text-sm">Explore these popular and profitable business concepts</p>
                 </div>
-
-                <div class="p-6 ticker">
-                    <div id="ticker" class="ticker-content"></div>
+                <div class="p-3 ticker">
+                    <div id="ticker" class="ticker-content text-sm">
+                        <!-- Trending ideas will be inserted here -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -124,38 +88,38 @@
 
     <!-- Login Modal -->
     <div id="loginModal" class="modal">
-        <div class="modal-content bg-white rounded-lg p-8">
-            <span class="close text-gray-500 float-right text-2xl font-bold cursor-pointer">&times;</span>
-            <h2 class="text-2xl font-bold mb-4">Login</h2>
+        <div class="modal-content bg-white rounded-lg p-6 w-11/12 max-w-md mx-auto mt-20">
+            <span class="close text-gray-500 float-right text-xl font-bold cursor-pointer">&times;</span>
+            <h2 class="text-xl font-bold mb-4">Login</h2>
             <form id="loginForm">
                 <div class="mb-4">
                     <label for="loginEmail" class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" id="loginEmail" name="email" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                    <input type="email" id="loginEmail" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
                 </div>
                 <div class="mb-4">
                     <label for="loginPassword" class="block text-sm font-medium text-gray-700">Password</label>
-                    <input type="password" id="loginPassword" name="password" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                    <input type="password" id="loginPassword" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
                 </div>
-                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Login</button>
+                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline text-sm transition duration-300">Login</button>
             </form>
         </div>
     </div>
 
     <!-- Register Modal -->
     <div id="registerModal" class="modal">
-        <div class="modal-content bg-white rounded-lg p-8">
-            <span class="close text-gray-500 float-right text-2xl font-bold cursor-pointer">&times;</span>
-            <h2 class="text-2xl font-bold mb-4">Register</h2>
+        <div class="modal-content bg-white rounded-lg p-6 w-11/12 max-w-md mx-auto mt-20">
+            <span class="close text-gray-500 float-right text-xl font-bold cursor-pointer">&times;</span>
+            <h2 class="text-xl font-bold mb-4">Register</h2>
             <form id="registerForm">
                 <div class="mb-4">
                     <label for="registerEmail" class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" id="registerEmail" name="email" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                    <input type="email" id="registerEmail" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
                 </div>
                 <div class="mb-4">
                     <label for="registerPassword" class="block text-sm font-medium text-gray-700">Password</label>
-                    <input type="password" id="registerPassword" name="password" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                    <input type="password" id="registerPassword" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
                 </div>
-                <button type="submit" class="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Register</button>
+                <button type="submit" class="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline text-sm transition duration-300">Register</button>
             </form>
         </div>
     </div>
