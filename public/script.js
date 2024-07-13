@@ -16,8 +16,7 @@ registerBtn.onclick = function() {
 // Close button functionality
 Array.from(closeBtns).forEach(btn => {
     btn.onclick = function() {
-        loginModal.style.display = "none";
-        registerModal.style.display = "none";
+        btn.closest('.modal').style.display = "none";
     }
 });
 

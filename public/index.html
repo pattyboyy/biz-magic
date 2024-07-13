@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Business Startup Helper</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-gray-100 text-sm font-sans">
     <nav class="bg-white shadow-md">
@@ -64,7 +63,7 @@
                     <h2 class="text-lg font-bold">Got specific questions about this plan?</h2>
                     <p class="text-sm">Ask me anything!</p>
                 </div>
-                <div id="chatMessages" class="flex-grow p-3 overflow-y-auto h-48 text-sm">
+                <div id="chatMessages" class="flex-grow p-3 overflow-y-auto h-48 text-sm custom-scrollbar">
                     <!-- Chat messages will be inserted here -->
                 </div>
                 <div class="p-3 border-t border-gray-200">
@@ -78,7 +77,7 @@
                     <p class="text-sm">Explore these popular and profitable business concepts</p>
                 </div>
                 <div class="p-3 ticker">
-                    <div id="ticker" class="ticker-content text-sm">
+                    <div id="ticker" class="ticker-content text-sm whitespace-nowrap overflow-hidden">
                         <!-- Trending ideas will be inserted here -->
                     </div>
                 </div>
@@ -87,8 +86,8 @@
     </div>
 
     <!-- Login Modal -->
-    <div id="loginModal" class="modal">
-        <div class="modal-content bg-white rounded-lg p-6 w-11/12 max-w-md mx-auto mt-20">
+    <div id="loginModal" class="fixed z-50 inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg p-6 w-11/12 max-w-md">
             <span class="close text-gray-500 float-right text-xl font-bold cursor-pointer">&times;</span>
             <h2 class="text-xl font-bold mb-4">Login</h2>
             <form id="loginForm">
@@ -106,8 +105,8 @@
     </div>
 
     <!-- Register Modal -->
-    <div id="registerModal" class="modal">
-        <div class="modal-content bg-white rounded-lg p-6 w-11/12 max-w-md mx-auto mt-20">
+    <div id="registerModal" class="fixed z-50 inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg p-6 w-11/12 max-w-md">
             <span class="close text-gray-500 float-right text-xl font-bold cursor-pointer">&times;</span>
             <h2 class="text-xl font-bold mb-4">Register</h2>
             <form id="registerForm">
@@ -123,6 +122,44 @@
             </form>
         </div>
     </div>
+
+    <style>
+        @keyframes ticker {
+            0% { transform: translate3d(100%, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
+        }
+
+        .ticker-content {
+            display: inline-block;
+            animation: ticker 30s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
 
     <script src="script.js"></script>
 </body>
