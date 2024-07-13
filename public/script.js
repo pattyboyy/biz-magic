@@ -91,7 +91,7 @@ generatePlanBtn.addEventListener('click', async function() {
 
             sectionDiv.innerHTML = `
                 <h3 class="font-bold text-lg mb-2">${sectionTitle}</h3>
-                <div class="section-content mb-2">${sectionContent}</div>
+                <p class="section-content mb-2 whitespace-pre-line">${sectionContent}</p>
                 <button class="learn-more-btn text-blue-500 underline">Learn More</button>
             `;
             businessPlanDiv.appendChild(sectionDiv);
