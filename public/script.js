@@ -4,6 +4,7 @@ const registerBtn = document.getElementById('registerBtn');
 const loginModal = document.getElementById('loginModal');
 const registerModal = document.getElementById('registerModal');
 const closeBtns = document.getElementsByClassName('close');
+const usernameDisplay = document.getElementById('usernameDisplay');
 
 loginBtn.onclick = function() {
     loginModal.style.display = "block";
@@ -58,6 +59,8 @@ generatePlanBtn.addEventListener('click', async function() {
         return;
     }
 
+    console.log('Generate Plan button clicked');
+
     loadingIcon.classList.remove('hidden');
     
     try {
@@ -73,13 +76,17 @@ generatePlanBtn.addEventListener('click', async function() {
             }),
         });
 
+        console.log('Request sent to /api/generate-plan');
+
         if (!response.ok) {
             const errorData = await response.json();
+            console.error('Error response:', errorData);
             throw new Error(errorData.error || 'Failed to generate business plan');
         }
 
         const data = await response.json();
-        
+        console.log('Response received from /api/generate-plan:', data);
+
         businessPlanDiv.innerHTML = ''; // Clear previous content
         const sections = data.businessPlan.split(/\n(?=\d\.)/).filter(section => section.trim());
         sections.forEach(section => {
@@ -248,7 +255,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         setAuthToken(data.token);
         loginModal.style.display = "none";
         alert('Logged in successfully!');
-        updateUIForLoggedInUser();
+        updateUIForLoggedInUser(data.username); // Pass username to function
     } catch (error) {
         console.error('Login error:', error);
         alert('Login failed. Please try again.');
@@ -281,9 +288,10 @@ document.getElementById('registerForm').addEventListener('submit', async functio
     }
 });
 
-function updateUIForLoggedInUser() {
+function updateUIForLoggedInUser(username) {
     loginBtn.style.display = 'none';
     registerBtn.style.display = 'none';
+    usernameDisplay.textContent = `Welcome ${username}`;
     const logoutBtn = document.createElement('a');
     logoutBtn.href = '#';
     logoutBtn.className = 'py-2 px-3 text-sm font-medium text-white bg-red-500 rounded hover:bg-red-400 transition duration-300';
@@ -300,6 +308,23 @@ function logout() {
 // Check authentication status on page load
 window.addEventListener('load', function() {
     if (authToken) {
-        updateUIForLoggedInUser();
+        // Fetch username from server or decode from token if included
+        fetch('/api/get-username', {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch username');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.username) {
+                updateUIForLoggedInUser(data.username);
+            }
+        })
+        .catch(error => console.error('Error fetching username:', error));
     }
 });

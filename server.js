@@ -77,8 +77,8 @@ app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
     if (user && await bcrypt.compare(password, user.password)) {
-      const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-      res.json({ token });
+      const token = jwt.sign({ userId: user._id, username: email.split('@')[0] }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      res.json({ token, username: email.split('@')[0] });
     } else {
       res.status(400).json({ error: 'Invalid credentials' });
     }
@@ -98,21 +98,21 @@ app.post('/api/generate-plan', authenticateToken, async (req, res) => {
     const { businessIdea, location } = req.body;
     console.log(`Generating plan for ${businessIdea} in ${location}`);
     
-    const prompt = `Create a comprehensive business plan for a ${businessIdea} in ${location}. Include 10 unique and distinct sections that cover every angle of starting up this business. Each section should have a title and a brief overview. Here are the sections:
-
-1. Executive Summary
-2. Business Description
-3. Products or Services
-4. Market Analysis
-5. Marketing and Sales Strategy
-6. Operations Plan
-7. Management Team
-8. Financial Projections
-9. Funding Requirements
-10. Legal and Regulatory Considerations
-
-For each section, provide a title and a brief overview. Ensure each section starts with its number and title on a new line.`;
+    const prompt = `Create a detailed business plan for a ${businessIdea} in ${location}. The plan should include the following sections with actionable and specific details:
     
+1. Executive Summary: A concise summary of the business idea, mission statement, and business objectives.
+2. Business Description: Details about the business, including its name, legal structure, and the nature of the business.
+3. Products or Services: Detailed information about the products or services the business will offer, including features, benefits, and pricing.
+4. Market Analysis: An analysis of the target market, including market size, trends, and competition.
+5. Marketing and Sales Strategy: A detailed marketing strategy, sales strategy, and methods for attracting and retaining customers.
+6. Operations Plan: An overview of the day-to-day operations, including location, facilities, equipment, and technology needed.
+7. Management Team: Information about the management team, their roles, and relevant experience.
+8. Financial Projections: Financial forecasts such as projected income statements, cash flow statements, and balance sheets for the next three to five years.
+9. Funding Requirements: Details about the funding needed to start and run the business, including the amount, purpose, and potential sources of funding.
+10. Legal and Regulatory Considerations: Information about any legal and regulatory requirements the business must comply with, including licenses, permits, and insurance.
+
+Each section should be comprehensive, specific, and provide actionable content relevant to the business idea. Include realistic financial projections with numbers where applicable. Ensure that the plan is tailored to a ${businessIdea} in ${location}.`;
+
     const completion = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: prompt }],
@@ -132,8 +132,8 @@ app.post('/api/expand-section', authenticateToken, async (req, res) => {
     const { sectionTitle, businessIdea, location } = req.body;
     console.log(`Expanding section: ${sectionTitle} for ${businessIdea} in ${location}`);
     
-    const prompt = `Expand in detail on the section titled "${sectionTitle}" for a business plan of a ${businessIdea} in ${location}. Provide a comprehensive overview.`;
-    
+    const prompt = `Expand in detail on the section titled "${sectionTitle}" for a business plan of a ${businessIdea} in ${location}. Provide a comprehensive overview with specific and actionable content. Include financial projections with realistic numbers and detailed explanations of costs, revenues, and other financial considerations where relevant.`;
+
     const completion = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: prompt }],
@@ -188,6 +188,19 @@ app.get('/api/trending-ideas', async (req, res) => {
 // Test route
 app.get('/api/test', (req, res) => {
   res.json({ message: 'Server is running' });
+});
+
+// Fetch username
+app.get('/api/get-username', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json({ username: user.email.split('@')[0] });
+  } catch (error) {
+    handleApiError(res, error, 'Error fetching username');
+  }
 });
 
 // Catch-all route to serve index.html for any unmatched routes
