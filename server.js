@@ -17,7 +17,8 @@ mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTop
 // User model
 const User = mongoose.model('User', new mongoose.Schema({
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true }
+  password: { type: String, required: true },
+  savedPlans: { type: [String], default: [] }
 }));
 
 // OpenAI configuration
@@ -100,16 +101,16 @@ app.post('/api/generate-plan', authenticateToken, async (req, res) => {
     
     const prompt = `Create a detailed business plan for a ${businessIdea} in ${location}. The plan should include the following sections with actionable and specific details:
     
-1. Executive Summary: A concise summary of the business idea, mission statement, and business objectives.
-2. Business Description: Details about the business, including its name, legal structure, and the nature of the business.
-3. Products or Services: Detailed information about the products or services the business will offer, including features, benefits, and pricing.
-4. Market Analysis: An analysis of the target market, including market size, trends, and competition.
-5. Marketing and Sales Strategy: A detailed marketing strategy, sales strategy, and methods for attracting and retaining customers.
-6. Operations Plan: An overview of the day-to-day operations, including location, facilities, equipment, and technology needed.
-7. Management Team: Information about the management team, their roles, and relevant experience.
-8. Financial Projections: Financial forecasts such as projected income statements, cash flow statements, and balance sheets for the next three to five years.
-9. Funding Requirements: Details about the funding needed to start and run the business, including the amount, purpose, and potential sources of funding.
-10. Legal and Regulatory Considerations: Information about any legal and regulatory requirements the business must comply with, including licenses, permits, and insurance.
+1. Executive Summary
+2. Business Description
+3. Products or Services
+4. Market Analysis
+5. Marketing and Sales Strategy
+6. Operations Plan
+7. Management Team
+8. Financial Projections
+9. Funding Requirements
+10. Legal and Regulatory Considerations
 
 Each section should be comprehensive, specific, and provide actionable content relevant to the business idea. Include realistic financial projections with numbers where applicable. Ensure that the plan is tailored to a ${businessIdea} in ${location}.`;
 
@@ -201,6 +202,52 @@ app.get('/api/get-username', authenticateToken, async (req, res) => {
   } catch (error) {
     handleApiError(res, error, 'Error fetching username');
   }
+});
+
+// Save business plan (protected route)
+app.post('/api/save-plan', authenticateToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        const { planContent, businessType, location } = req.body;
+        
+        // Structure the plan content
+        const structuredPlan = {
+            businessType,
+            location,
+            dateCreated: new Date().toISOString(),
+            sections: planContent.split('\n\n').map(section => {
+                const [title, ...content] = section.split('\n');
+                return { title: title.trim(), content: content.join('\n').trim() };
+            })
+        };
+        
+        user.savedPlans.push(JSON.stringify(structuredPlan));
+        await user.save();
+        res.status(200).json({ message: 'Business plan saved successfully' });
+    } catch (error) {
+        handleApiError(res, error, 'Error saving business plan');
+    }
+});
+
+// Fetch user profile (protected route)
+app.get('/api/profile', authenticateToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        res.json({ savedPlans: user.savedPlans });
+    } catch (error) {
+        handleApiError(res, error, 'Error fetching profile');
+    }
+});
+
+// Serve profile.html
+app.get('/profile.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'profile.html'));
 });
 
 // Catch-all route to serve index.html for any unmatched routes

@@ -3,84 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Business Startup Helper</title>
+    <title>BizMagic - Business Plan Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .bizmagic-logo {
+            font-family: 'Arial', sans-serif;
+            font-weight: bold;
+            font-size: 1.75rem;
+            background: linear-gradient(45deg, #4e54c8, #8f94fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        .bizmagic-logo:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(79, 84, 200, 0.5);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        .ticker-content {
+            white-space: nowrap;
+            animation: ticker 20s linear infinite;
+        }
+        @keyframes ticker {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+    </style>
 </head>
-<body class="bg-gray-100 text-sm font-sans">
-    <nav class="bg-white shadow-md">
-        <div class="max-w-6xl mx-auto px-4">
-            <div class="flex justify-between">
-                <div class="flex space-x-4">
-                    <div>
-                        <a href="#" class="flex items-center py-3 px-2">
-                            <span class="font-semibold text-gray-500 text-base">Business Startup Helper</span>
-                        </a>
-                    </div>
-                </div>
-                <div class="hidden md:flex items-center space-x-1">
-                    <a href="#" id="loginBtn" class="py-2 px-3 text-sm font-medium text-gray-500 rounded hover:bg-green-500 hover:text-white transition duration-300">Log In</a>
-                    <a href="#" id="registerBtn" class="py-2 px-3 text-sm font-medium text-white bg-green-500 rounded hover:bg-green-400 transition duration-300">Register</a>
-                    <span id="usernameDisplay" class="py-2 px-3 text-sm font-medium text-gray-500 rounded"></span>
-                </div>
+<body class="bg-gray-100">
+    <div class="max-w-6xl mx-auto px-4">
+        <div class="flex justify-between items-center py-4">
+            <div>
+                <a href="#" class="flex items-center">
+                    <span class="bizmagic-logo">BizMagic</span>
+                </a>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <a href="#" id="loginBtn" class="py-2 px-4 text-sm font-medium text-blue-600 hover:text-blue-800 transition duration-300">Log In</a>
+                <a href="#" id="registerBtn" class="py-2 px-4 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition duration-300">Register</a>
+                <a href="profile.html" id="myProfileBtn" class="py-2 px-4 text-sm font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 transition duration-300">My Profile</a>
+                <span id="usernameDisplay" class="py-2 px-3 text-sm font-medium text-gray-700"></span>
             </div>
         </div>
-    </nav>
+    </div>
 
-    <div class="container mx-auto flex flex-col md:flex-row gap-4 p-4">
-        <div class="w-full md:w-2/3 bg-white rounded-lg shadow-md overflow-hidden">
-            <div class="bg-gradient-to-r from-blue-500 to-purple-500 p-4 text-white">
-                <h1 class="text-xl font-bold mb-2">Comprehensive Business Startup Helper</h1>
-                <p class="text-sm">Get a detailed plan with realistic projections for your business idea</p>
+    <div class="container mx-auto flex flex-col md:flex-row gap-6 p-6">
+        <div class="w-full md:w-2/3 bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
+                <h2 class="text-2xl font-bold mb-2">Business Plan Generator</h2>
+                <p>Get a detailed plan with realistic projections for your business idea</p>
             </div>
-            <div class="p-4">
-                <div class="mb-4">
-                    <label for="businessType" class="block text-sm font-medium text-gray-700">What kind of business do you want to start?</label>
-                    <input type="text" id="businessType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
-                </div>
-                <div class="mb-4">
-                    <label for="location" class="block text-sm font-medium text-gray-700">Location (City, State)</label>
-                    <input type="text" id="location" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
-                </div>
-                <button id="generatePlan" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline text-sm transition duration-300">
-                    Generate Business Plan
-                    <svg id="loadingIcon" class="animate-spin ml-3 h-4 w-4 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
+            <div class="p-6">
+                <form id="businessForm">
+                    <div class="mb-4">
+                        <label for="businessType" class="block text-gray-700 text-sm font-bold mb-2">What kind of business do you want to start?</label>
+                        <input type="text" id="businessType" name="businessType" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-blue-500" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="location" class="block text-gray-700 text-sm font-bold mb-2">Location (City, State)</label>
+                        <input type="text" id="location" name="location" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-blue-500" required>
+                    </div>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-300">
+                        Generate Business Plan
+                        <svg id="loadingIcon" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
+                </form>
+                <button id="saveEntirePlan" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 hidden">
+                    Save Entire Plan
                 </button>
             </div>
             <div id="result" class="hidden">
-                <div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
-                    <h2 class="text-lg font-semibold mb-2">Your Comprehensive Business Plan</h2>
-                    <div id="businessPlan" class="space-y-2 text-sm">
-                        <!-- Business plan content will be inserted here -->
-                    </div>
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                    <h3 class="text-xl font-semibold mb-2">Your Comprehensive Business Plan</h3>
+                    <div id="businessPlan" class="space-y-4 text-sm"></div>
                 </div>
             </div>
         </div>
-        <div class="w-full md:w-1/3 flex flex-col gap-4">
-            <div class="bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
-                <div class="bg-gradient-to-r from-green-500 to-teal-500 p-3 text-white">
+
+        <div class="w-full md:w-1/3 flex flex-col gap-6">
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-gradient-to-r from-green-500 to-teal-500 p-4 text-white">
                     <h2 class="text-lg font-bold">Got specific questions about this plan?</h2>
-                    <p class="text-sm">Ask me anything!</p>
+                    <p>Ask me anything!</p>
                 </div>
-                <div id="chatMessages" class="flex-grow p-3 overflow-y-auto h-48 text-sm custom-scrollbar">
-                    <!-- Chat messages will be inserted here -->
-                </div>
-                <div class="p-3 border-t border-gray-200">
-                    <input type="text" id="chatInput" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Type your question...">
-                    <button id="sendChat" class="mt-2 w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm transition duration-300">Send</button>
+                <div id="chatMessages" class="h-48 p-4 overflow-y-auto text-sm custom-scrollbar"></div>
+                <div class="p-4 border-t border-gray-200">
+                    <form id="chatForm" class="flex">
+                        <input type="text" id="chatInput" class="flex-grow px-3 py-2 border rounded-l-lg focus:outline-none focus:border-blue-500" placeholder="Type your question here...">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-r-lg transition duration-300">Send</button>
+                    </form>
                 </div>
             </div>
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <div class="bg-gradient-to-r from-yellow-400 to-orange-500 p-3 text-white">
+
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-gradient-to-r from-yellow-400 to-orange-500 p-4 text-white">
                     <h2 class="text-lg font-bold mb-1">Trending Business Ideas Across the US</h2>
-                    <p class="text-sm">Explore these popular and profitable business concepts</p>
+                    <p>Explore these popular and profitable business concepts</p>
                 </div>
-                <div class="p-3 ticker">
-                    <div id="ticker" class="ticker-content text-sm whitespace-nowrap overflow-hidden">
-                        <!-- Trending ideas will be inserted here -->
-                    </div>
+                <div class="p-4 overflow-hidden">
+                    <div id="ticker" class="ticker-content text-sm"></div>
                 </div>
             </div>
         </div>
@@ -88,79 +129,41 @@
 
     <!-- Login Modal -->
     <div id="loginModal" class="fixed z-50 inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-lg p-6 w-11/12 max-w-md">
+        <div class="bg-white rounded-lg p-8 w-11/12 max-w-md">
             <span class="close text-gray-500 float-right text-xl font-bold cursor-pointer">&times;</span>
-            <h2 class="text-xl font-bold mb-4">Login</h2>
+            <h2 class="text-2xl font-bold mb-6">Login</h2>
             <form id="loginForm">
                 <div class="mb-4">
-                    <label for="loginEmail" class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" id="loginEmail" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
+                    <label for="loginEmail" class="block text-gray-700 text-sm font-bold mb-2">Email</label>
+                    <input type="email" id="loginEmail" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-blue-500" required>
                 </div>
-                <div class="mb-4">
-                    <label for="loginPassword" class="block text-sm font-medium text-gray-700">Password</label>
-                    <input type="password" id="loginPassword" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
+                <div class="mb-6">
+                    <label for="loginPassword" class="block text-gray-700 text-sm font-bold mb-2">Password</label>
+                    <input type="password" id="loginPassword" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-blue-500" required>
                 </div>
-                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline text-sm transition duration-300">Login</button>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-300">Login</button>
             </form>
         </div>
     </div>
 
     <!-- Register Modal -->
     <div id="registerModal" class="fixed z-50 inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-lg p-6 w-11/12 max-w-md">
+        <div class="bg-white rounded-lg p-8 w-11/12 max-w-md">
             <span class="close text-gray-500 float-right text-xl font-bold cursor-pointer">&times;</span>
-            <h2 class="text-xl font-bold mb-4">Register</h2>
+            <h2 class="text-2xl font-bold mb-6">Register</h2>
             <form id="registerForm">
                 <div class="mb-4">
-                    <label for="registerEmail" class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" id="registerEmail" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
+                    <label for="registerEmail" class="block text-gray-700 text-sm font-bold mb-2">Email</label>
+                    <input type="email" id="registerEmail" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-blue-500" required>
                 </div>
-                <div class="mb-4">
-                    <label for="registerPassword" class="block text-sm font-medium text-gray-700">Password</label>
-                    <input type="password" id="registerPassword" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
+                <div class="mb-6">
+                    <label for="registerPassword" class="block text-gray-700 text-sm font-bold mb-2">Password</label>
+                    <input type="password" id="registerPassword" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-blue-500" required>
                 </div>
-                <button type="submit" class="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline text-sm transition duration-300">Register</button>
+                <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-300">Register</button>
             </form>
         </div>
     </div>
-
-    <style>
-        @keyframes ticker {
-            0% { transform: translate3d(100%, 0, 0); }
-            100% { transform: translate3d(-100%, 0, 0); }
-        }
-
-        .ticker-content {
-            display: inline-block;
-            animation: ticker 30s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .animate-spin {
-            animation: spin 1s linear infinite;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 3px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-    </style>
 
     <script src="script.js"></script>
 </body>
