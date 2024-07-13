@@ -98,7 +98,7 @@ app.post('/api/generate-plan', authenticateToken, async (req, res) => {
     const { businessIdea, location } = req.body;
     console.log(`Generating plan for ${businessIdea} in ${location}`);
     
-    const prompt = `Create a comprehensive business plan for a ${businessIdea} in ${location}. Include the following numbered sections:
+    const prompt = `Create a comprehensive business plan for a ${businessIdea} in ${location}. Include 10 unique and distinct sections that cover every angle of starting up this business. Each section should have a title and a brief overview. Here are the sections:
 
 1. Executive Summary
 2. Business Description
@@ -123,6 +123,27 @@ For each section, provide a title and a brief overview. Ensure each section star
     res.json({ businessPlan: completion.data.choices[0].message.content });
   } catch (error) {
     handleApiError(res, error, 'Error generating business plan');
+  }
+});
+
+// Expand section (protected route)
+app.post('/api/expand-section', authenticateToken, async (req, res) => {
+  try {
+    const { sectionTitle, businessIdea, location } = req.body;
+    console.log(`Expanding section: ${sectionTitle} for ${businessIdea} in ${location}`);
+    
+    const prompt = `Expand in detail on the section titled "${sectionTitle}" for a business plan of a ${businessIdea} in ${location}. Provide a comprehensive overview.`;
+    
+    const completion = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    console.log('OpenAI API response:', completion.data);
+
+    res.json({ expandedContent: completion.data.choices[0].message.content });
+  } catch (error) {
+    handleApiError(res, error, 'Error expanding section');
   }
 });
 

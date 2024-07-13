@@ -80,7 +80,24 @@ generatePlanBtn.addEventListener('click', async function() {
 
         const data = await response.json();
         
-        businessPlanDiv.innerHTML = data.businessPlan;
+        businessPlanDiv.innerHTML = ''; // Clear previous content
+        const sections = data.businessPlan.split(/\n(?=\d\.)/).filter(section => section.trim());
+        sections.forEach(section => {
+            const sectionDiv = document.createElement('div');
+            sectionDiv.classList.add('section', 'p-4', 'mb-4', 'bg-white', 'rounded-lg', 'shadow-md');
+
+            const sectionTitle = section.split('\n')[0];
+            const sectionContent = section.split('\n').slice(1).join('\n');
+
+            sectionDiv.innerHTML = `
+                <h3 class="font-bold text-lg mb-2">${sectionTitle}</h3>
+                <div class="section-content mb-2">${sectionContent}</div>
+                <button class="learn-more-btn text-blue-500 underline">Learn More</button>
+            `;
+            businessPlanDiv.appendChild(sectionDiv);
+        });
+
+        addLearnMoreFunctionality();
         resultDiv.classList.remove('hidden');
     } catch (error) {
         console.error('Error generating business plan:', error);
@@ -89,6 +106,44 @@ generatePlanBtn.addEventListener('click', async function() {
         loadingIcon.classList.add('hidden');
     }
 });
+
+// Expand section functionality
+function addLearnMoreFunctionality() {
+    const sections = businessPlanDiv.querySelectorAll('div.section');
+    sections.forEach(section => {
+        const learnMoreBtn = section.querySelector('.learn-more-btn');
+
+        learnMoreBtn.addEventListener('click', async function() {
+            const sectionTitle = section.querySelector('h3').textContent;
+            try {
+                const response = await fetch('/api/expand-section', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        sectionTitle: sectionTitle,
+                        businessIdea: businessTypeInput.value,
+                        location: locationInput.value
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to expand section');
+                }
+
+                const data = await response.json();
+                section.querySelector('.section-content').innerHTML = data.expandedContent;
+                learnMoreBtn.style.display = 'none'; // Hide the button after expanding
+            } catch (error) {
+                console.error('Error expanding section:', error);
+                alert(`Failed to expand section: ${error.message}`);
+            }
+        });
+    });
+}
 
 // Chat Functionality
 const chatInput = document.getElementById('chatInput');
