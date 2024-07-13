@@ -171,20 +171,44 @@ app.post('/api/chat', authenticateToken, async (req, res) => {
 
 // Trending business ideas
 app.get('/api/trending-ideas', async (req, res) => {
-  try {
-    // This is a placeholder. In a real application, you might fetch this data from another API or database
-    const trendingIdeas = [
-      "Eco-friendly Product Store",
-      "Virtual Reality Arcade",
-      "Artisanal Coffee Roastery",
-      "Tech Education for Seniors",
-      "Personalized Nutrition Plans"
-    ];
-    res.json({ trendingIdeas });
-  } catch (error) {
-    handleApiError(res, error, 'Error fetching trending ideas');
-  }
-});
+    try {
+      const trendingIdeas = [
+        "Eco-friendly Product Store",
+        "Virtual Reality Arcade",
+        "Artisanal Coffee Roastery",
+        "Tech Education for Seniors",
+        "Personalized Nutrition Plans",
+        "Sustainable Fashion Brand",
+        "Smart Home Installation Service",
+        "Urban Vertical Farming",
+        "AI-powered Personal Shopping",
+        "Mindfulness and Meditation App",
+        "Electric Vehicle Charging Stations",
+        "Drone Photography and Videography",
+        "Pet Wellness and Holistic Care",
+        "Upcycled Furniture Workshop",
+        "Virtual Interior Design Service",
+        "Subscription-based Meal Prep",
+        "Augmented Reality Tour Guide",
+        "Sustainable Packaging Solutions",
+        "Esports Training Academy",
+        "Tiny House Construction",
+        "Biohacking and Wellness Center",
+        "Robotic Pet Sitting Service",
+        "Zero-waste Grocery Store",
+        "Virtual Team Building Experiences",
+        "3D Printed Custom Prosthetics",
+        "Eco-friendly Travel Agency",
+        "Cryptocurrency Education Platform",
+        "Plant-based Meat Alternatives",
+        "Virtual Reality Fitness Classes",
+        "Sustainable Beauty and Skincare Line"
+      ];
+      res.json({ trendingIdeas });
+    } catch (error) {
+      handleApiError(res, error, 'Error fetching trending ideas');
+    }
+  });
 
 // Test route
 app.get('/api/test', (req, res) => {
@@ -239,9 +263,30 @@ app.get('/api/profile', authenticateToken, async (req, res) => {
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
-        res.json({ savedPlans: user.savedPlans });
+        res.json({ email: user.email, savedPlans: user.savedPlans });
     } catch (error) {
         handleApiError(res, error, 'Error fetching profile');
+    }
+});
+
+// Delete business plan (protected route)
+app.post('/api/delete-plan', authenticateToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        const { planIndex } = req.body;
+        
+        if (planIndex < 0 || planIndex >= user.savedPlans.length) {
+            return res.status(400).json({ error: 'Invalid plan index' });
+        }
+        
+        user.savedPlans.splice(planIndex, 1);
+        await user.save();
+        res.status(200).json({ message: 'Business plan deleted successfully' });
+    } catch (error) {
+        handleApiError(res, error, 'Error deleting business plan');
     }
 });
 

@@ -6,13 +6,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const registerModal = document.getElementById('registerModal');
     const closeBtns = document.getElementsByClassName('close');
     const usernameDisplay = document.getElementById('usernameDisplay');
+    const myProfileBtn = document.getElementById('myProfileBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
 
-    loginBtn.onclick = function() {
-        loginModal.style.display = "block";
+    if (loginBtn) {
+        loginBtn.onclick = function() {
+            loginModal.style.display = "block";
+        }
     }
 
-    registerBtn.onclick = function() {
-        registerModal.style.display = "block";
+    if (registerBtn) {
+        registerBtn.onclick = function() {
+            registerModal.style.display = "block";
+        }
     }
 
     // Close button functionality
@@ -47,6 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Business Plan Generation
+    const businessForm = document.getElementById('businessForm');
     const businessTypeInput = document.getElementById('businessType');
     const locationInput = document.getElementById('location');
     const loadingIcon = document.getElementById('loadingIcon');
@@ -54,111 +61,115 @@ document.addEventListener('DOMContentLoaded', function() {
     const businessPlanDiv = document.getElementById('businessPlan');
     const saveEntirePlanBtn = document.getElementById('saveEntirePlan');
 
-    document.getElementById('businessForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        if (!authToken) {
-            alert('Please log in to generate a business plan.');
-            return;
-        }
-
-        console.log('Generate Plan button clicked');
-
-        loadingIcon.classList.remove('hidden');
-        
-        try {
-            const response = await fetch('/api/generate-plan', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${authToken}`
-                },
-                body: JSON.stringify({
-                    businessIdea: businessTypeInput.value,
-                    location: locationInput.value
-                }),
-            });
-
-            console.log('Request sent to /api/generate-plan');
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error('Error response:', errorData);
-                throw new Error(errorData.error || 'Failed to generate business plan');
+    if (businessForm) {
+        businessForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (!authToken) {
+                alert('Please log in to generate a business plan.');
+                return;
             }
 
-            const data = await response.json();
-            console.log('Response received from /api/generate-plan:', data);
+            console.log('Generate Plan button clicked');
 
-            businessPlanDiv.innerHTML = ''; // Clear previous content
-            const sections = data.businessPlan.split(/\n(?=\d\.)/).filter(section => section.trim());
-            sections.forEach(section => {
-                const sectionDiv = document.createElement('div');
-                sectionDiv.classList.add('section', 'p-4', 'mb-4', 'bg-white', 'rounded-lg', 'shadow-md');
+            loadingIcon.classList.remove('hidden');
+            
+            try {
+                const response = await fetch('/api/generate-plan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        businessIdea: businessTypeInput.value,
+                        location: locationInput.value
+                    }),
+                });
 
-                const sectionTitle = section.split('\n')[0];
-                const sectionContent = section.split('\n').slice(1).join('\n');
+                console.log('Request sent to /api/generate-plan');
 
-                sectionDiv.innerHTML = `
-                    <h3 class="font-bold text-lg mb-2">${sectionTitle}</h3>
-                    <p class="section-content mb-2 whitespace-pre-line">${sectionContent}</p>
-                    <button class="learn-more-btn text-blue-500 underline">Learn More</button>
-                `;
-                businessPlanDiv.appendChild(sectionDiv);
-            });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Error response:', errorData);
+                    throw new Error(errorData.error || 'Failed to generate business plan');
+                }
 
-            addLearnMoreFunctionality();
-            resultDiv.classList.remove('hidden');
-            saveEntirePlanBtn.classList.remove('hidden');
-        } catch (error) {
-            console.error('Error generating business plan:', error);
-            alert(`Failed to generate business plan: ${error.message}`);
-        } finally {
-            loadingIcon.classList.add('hidden');
-        }
-    });
+                const data = await response.json();
+                console.log('Response received from /api/generate-plan:', data);
+
+                businessPlanDiv.innerHTML = ''; // Clear previous content
+                const sections = data.businessPlan.split(/\n(?=\d\.)/).filter(section => section.trim());
+                sections.forEach(section => {
+                    const sectionDiv = document.createElement('div');
+                    sectionDiv.classList.add('section', 'p-4', 'mb-4', 'bg-white', 'rounded-lg', 'shadow-md');
+
+                    const sectionTitle = section.split('\n')[0];
+                    const sectionContent = section.split('\n').slice(1).join('\n');
+
+                    sectionDiv.innerHTML = `
+                        <h3 class="font-bold text-lg mb-2">${sectionTitle}</h3>
+                        <p class="section-content mb-2 whitespace-pre-line">${sectionContent}</p>
+                        <button class="learn-more-btn text-blue-500 underline">Learn More</button>
+                    `;
+                    businessPlanDiv.appendChild(sectionDiv);
+                });
+
+                addLearnMoreFunctionality();
+                resultDiv.classList.remove('hidden');
+                saveEntirePlanBtn.classList.remove('hidden');
+            } catch (error) {
+                console.error('Error generating business plan:', error);
+                alert(`Failed to generate business plan: ${error.message}`);
+            } finally {
+                loadingIcon.classList.add('hidden');
+            }
+        });
+    }
 
     // Save Entire Plan functionality
-    saveEntirePlanBtn.addEventListener('click', async function() {
-        if (!authToken) {
-            alert('Please log in to save the business plan.');
-            return;
-        }
-
-        console.log('Save Entire Plan button clicked');
-
-        try {
-            const sections = businessPlanDiv.querySelectorAll('.section');
-            let fullPlanContent = '';
-            sections.forEach(section => {
-                const title = section.querySelector('h3').textContent;
-                const content = section.querySelector('.section-content').textContent;
-                fullPlanContent += title + '\n' + content + '\n\n';
-            });
-
-            const response = await fetch('/api/save-plan', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${authToken}`
-                },
-                body: JSON.stringify({
-                    planContent: fullPlanContent,
-                    businessType: businessTypeInput.value,
-                    location: locationInput.value
-                }),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to save entire plan');
+    if (saveEntirePlanBtn) {
+        saveEntirePlanBtn.addEventListener('click', async function() {
+            if (!authToken) {
+                alert('Please log in to save the business plan.');
+                return;
             }
 
-            alert('Entire business plan saved successfully!');
-        } catch (error) {
-            console.error('Error saving entire plan:', error);
-            alert(`Failed to save entire plan: ${error.message}`);
-        }
-    });
+            console.log('Save Entire Plan button clicked');
+
+            try {
+                const sections = businessPlanDiv.querySelectorAll('.section');
+                let fullPlanContent = '';
+                sections.forEach(section => {
+                    const title = section.querySelector('h3').textContent;
+                    const content = section.querySelector('.section-content').textContent;
+                    fullPlanContent += title + '\n' + content + '\n\n';
+                });
+
+                const response = await fetch('/api/save-plan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        planContent: fullPlanContent,
+                        businessType: businessTypeInput.value,
+                        location: locationInput.value
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to save entire plan');
+                }
+
+                alert('Entire business plan saved successfully!');
+            } catch (error) {
+                console.error('Error saving entire plan:', error);
+                alert(`Failed to save entire plan: ${error.message}`);
+            }
+        });
+    }
 
     // Expand section functionality
     function addLearnMoreFunctionality() {
@@ -199,16 +210,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Chat Functionality
+    const chatForm = document.getElementById('chatForm');
     const chatInput = document.getElementById('chatInput');
-    const sendChatBtn = document.getElementById('sendChat');
     const chatMessages = document.getElementById('chatMessages');
 
-    sendChatBtn.addEventListener('click', sendChatMessage);
-    chatInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
+    if (chatForm) {
+        chatForm.addEventListener('submit', function(e) {
+            e.preventDefault();
             sendChatMessage();
-        }
-    });
+        });
+    }
 
     async function sendChatMessage() {
         if (!authToken) {
@@ -275,85 +286,146 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    updateTicker();
-    setInterval(updateTicker, 60000); // Update every minute
+    if (ticker) {
+        updateTicker();
+        setInterval(updateTicker, 60000); // Update every minute
+    }
 
     // Authentication
-    document.getElementById('loginForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
 
-        try {
-            const response = await fetch('/api/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email, password }),
-            });
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
 
-            if (!response.ok) {
-                throw new Error('Login failed');
+                if (!response.ok) {
+                    throw new Error('Login failed');
+                }
+
+                const data = await response.json();
+                setAuthToken(data.token);
+                localStorage.setItem('username', data.username); // Store username
+                loginModal.style.display = "none";
+                updateUIForLoggedInUser(data.username);
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Login failed. Please try again.');
+            }
+        });
+    }
+
+    const registerForm = document.getElementById('registerForm');
+    const registerPassword = document.getElementById('registerPassword');
+    const confirmPassword = document.getElementById('confirmPassword');
+    const passwordStrength = document.getElementById('passwordStrength');
+
+    if (registerForm) {
+        // Password strength checker
+        registerPassword.addEventListener('input', function() {
+            const password = this.value;
+            let strength = 0;
+            
+            if (password.match(/[a-z]+/)) strength += 1;
+            if (password.match(/[A-Z]+/)) strength += 1;
+            if (password.match(/[0-9]+/)) strength += 1;
+            if (password.match(/[$@#&!]+/)) strength += 1;
+            if (password.length >= 8) strength += 1;
+
+            switch (strength) {
+                case 0:
+                case 1:
+                    passwordStrength.textContent = 'Weak';
+                    passwordStrength.className = 'text-sm mt-1 text-red-500';
+                    break;
+                case 2:
+                case 3:
+                    passwordStrength.textContent = 'Moderate';
+                    passwordStrength.className = 'text-sm mt-1 text-yellow-500';
+                    break;
+                case 4:
+                case 5:
+                    passwordStrength.textContent = 'Strong';
+                    passwordStrength.className = 'text-sm mt-1 text-green-500';
+                    break;
+            }
+        });
+
+        registerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('registerEmail').value;
+            const password = registerPassword.value;
+            const confirmedPassword = confirmPassword.value;
+
+            // Check if passwords match
+            if (password !== confirmedPassword) {
+                alert('Passwords do not match. Please try again.');
+                return;
             }
 
-            const data = await response.json();
-            setAuthToken(data.token);
-            loginModal.style.display = "none";
-            alert('Logged in successfully!');
-            updateUIForLoggedInUser(data.username);
-        } catch (error) {
-            console.error('Login error:', error);
-            alert('Login failed. Please try again.');
-        }
-    });
-
-    document.getElementById('registerForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const email = document.getElementById('registerEmail').value;
-        const password = document.getElementById('registerPassword').value;
-
-        try {
-            const response = await fetch('/api/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email, password }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Registration failed');
+            // Check password strength
+            if (passwordStrength.textContent === 'Weak') {
+                alert('Please choose a stronger password.');
+                return;
             }
 
-            registerModal.style.display = "none";
-            alert('Registered successfully! Please log in.');
-        } catch (error) {
-            console.error('Registration error:', error);
-            alert('Registration failed. Please try again.');
-        }
-    });
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Registration failed');
+                }
+
+                registerModal.style.display = "none";
+                alert('Registered successfully! Please log in.');
+            } catch (error) {
+                console.error('Registration error:', error);
+                alert('Registration failed. Please try again.');
+            }
+        });
+    }
 
     function updateUIForLoggedInUser(username) {
-        loginBtn.style.display = 'none';
-        registerBtn.style.display = 'none';
-        usernameDisplay.textContent = `Welcome ${username}`;
-        const logoutBtn = document.createElement('a');
-        logoutBtn.href = '#';
-        logoutBtn.className = 'py-2 px-3 text-sm font-medium text-white bg-red-500 rounded hover:bg-red-400 transition duration-300';
-        logoutBtn.textContent = 'Logout';
-        logoutBtn.onclick = logout;
-        registerBtn.parentNode.appendChild(logoutBtn);
+        if (loginBtn) loginBtn.style.display = 'none';
+        if (registerBtn) registerBtn.style.display = 'none';
+        if (myProfileBtn) myProfileBtn.style.display = 'inline-block';
+        if (logoutBtn) logoutBtn.style.display = 'inline-block';
+        if (usernameDisplay) {
+            usernameDisplay.textContent = `Welcome, ${username}`;
+            usernameDisplay.style.display = 'inline-block';
+        }
+    }
 
-        const myProfileBtn = document.getElementById('myProfileBtn');
-        if (myProfileBtn) {
-            myProfileBtn.style.display = 'inline-block';
+    function updateUIForLoggedOutUser() {
+        if (loginBtn) loginBtn.style.display = 'inline-block';
+        if (registerBtn) registerBtn.style.display = 'inline-block';
+        if (myProfileBtn) myProfileBtn.style.display = 'none';
+        if (logoutBtn) logoutBtn.style.display = 'none';
+        if (usernameDisplay) {
+            usernameDisplay.textContent = '';
+            usernameDisplay.style.display = 'none';
         }
     }
 
     function logout() {
         clearAuthToken();
-        location.reload();
+        localStorage.removeItem('username'); // Clear stored username
+        updateUIForLoggedOutUser();
     }
 
     // Check authentication status on page load
@@ -377,6 +449,107 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => {
             console.error('Error fetching username:', error);
             clearAuthToken();
+            updateUIForLoggedOutUser();
         });
+    } else {
+        updateUIForLoggedOutUser();
     }
+
+    // Initial UI update
+    const storedUsername = localStorage.getItem('username');
+    if (storedUsername) {
+        updateUIForLoggedInUser(storedUsername);
+    } else {
+        updateUIForLoggedOutUser();
+    }
+
+    // Profile page functionality
+    const profileContent = document.getElementById('profileContent');
+    if (profileContent) {
+        fetchUserProfile();
+    }
+
+    async function fetchUserProfile() {
+        try {
+            const response = await fetch('/api/profile', {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch profile');
+            }
+
+            const data = await response.json();
+            displayUserProfile(data);
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+            alert('Failed to load profile. Please try again later.');
+        }
+    }
+
+    function displayUserProfile(data) {
+        if (!profileContent) return;
+
+        profileContent.innerHTML = `
+            <div class="border-b pb-4">
+                <h2 class="text-xl font-semibold mb-2">Account Information</h2>
+                <p>Email: ${data.email}</p>
+            </div>
+            <div>
+                <h2 class="text-xl font-semibold mb-4">Saved Business Plans</h2>
+                <div id="savedPlans" class="space-y-4"></div>
+            </div>
+        `;
+
+        const savedPlansContainer = document.getElementById('savedPlans');
+        if (data.savedPlans && data.savedPlans.length > 0) {
+            data.savedPlans.forEach((plan, index) => {
+                const planElement = document.createElement('div');
+                planElement.className = 'bg-white rounded-lg shadow-md p-4 mb-4';
+                planElement.innerHTML = `
+                    <h4 class="font-bold text-lg mb-2">${plan.businessType || 'Unnamed Plan'}</h4>
+                    <p class="text-sm text-gray-600 mb-2">Created on: ${new Date(plan.dateCreated).toLocaleDateString()}</p>
+                    <p class="text-sm mb-2">Location: ${plan.location || 'Unknown Location'}</p>
+                    <button onclick="expandPlan(${index})" class="mt-2 text-blue-500 hover:text-blue-700">View Full Plan</button>
+                    <button onclick="deletePlan(${index})" class="mt-2 ml-2 text-red-500 hover:text-red-700">Delete Plan</button>
+                `;
+                savedPlansContainer.appendChild(planElement);
+            });
+        } else {
+            savedPlansContainer.innerHTML = '<p>No saved plans yet.</p>';
+        }
+    }
+
+    window.expandPlan = function(index) {
+        // Implement expand plan functionality
+        console.log('Expand plan', index);
+        // You can add a modal or expand the plan inline
+    };
+
+    window.deletePlan = async function(index) {
+        if (confirm('Are you sure you want to delete this plan?')) {
+            try {
+                const response = await fetch('/api/delete-plan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ planIndex: index }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to delete plan');
+                }
+
+                alert('Plan deleted successfully');
+                fetchUserProfile(); // Refresh the profile to show updated list
+            } catch (error) {
+                console.error('Error deleting plan:', error);
+                alert('Failed to delete plan. Please try again later.');
+            }
+        }
+    };
 });

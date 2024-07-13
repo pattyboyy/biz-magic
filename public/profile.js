@@ -20,40 +20,51 @@ async function fetchUserProfile() {
         }
 
         const data = await response.json();
-        const profileContent = document.getElementById('profileContent');
-        profileContent.innerHTML = `
-            <h3 class="font-bold text-xl mb-4">Saved Business Plans</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                ${data.savedPlans.map((plan, index) => {
-                    let parsedPlan;
-                    try {
-                        parsedPlan = JSON.parse(plan);
-                    } catch (error) {
-                        console.log('Plan is not in JSON format:', plan);
-                        // Treat the plan as a simple string
-                        parsedPlan = {
-                            businessType: 'Unnamed Plan',
-                            location: 'Unknown Location',
-                            dateCreated: new Date().toISOString(),
-                            content: plan
-                        };
-                    }
-                    return `
-                        <div class="bg-white rounded-lg shadow-md p-4 mb-4">
-                            <h4 class="font-bold text-lg mb-2">${parsedPlan.businessType || 'Unnamed Plan'}</h4>
-                            <p class="text-sm text-gray-600 mb-2">Created on: ${new Date(parsedPlan.dateCreated).toLocaleDateString()}</p>
-                            <p class="text-sm">${(parsedPlan.content || parsedPlan.sections?.[0]?.content || '').substring(0, 100)}...</p>
-                            <button onclick="expandPlan(${index})" class="mt-2 text-blue-500 hover:text-blue-700">View Full Plan</button>
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-        `;
-        // Store the plans in localStorage for the expandPlan function to use
-        localStorage.setItem('savedPlans', JSON.stringify(data.savedPlans));
+        displayUserProfile(data);
     } catch (error) {
         console.error('Error fetching profile:', error);
         alert('Failed to load profile. Please try again later.');
+    }
+}
+
+// Display User Profile
+function displayUserProfile(data) {
+    const profileContent = document.getElementById('profileContent');
+    const userEmail = document.getElementById('userEmail');
+    const savedPlansContainer = document.getElementById('savedPlans');
+
+    // Display user email
+    userEmail.textContent = data.email || 'Email not available';
+
+    // Display saved plans
+    savedPlansContainer.innerHTML = ''; // Clear existing content
+    if (data.savedPlans && data.savedPlans.length > 0) {
+        data.savedPlans.forEach((plan, index) => {
+            let parsedPlan;
+            try {
+                parsedPlan = JSON.parse(plan);
+            } catch (error) {
+                console.log('Plan is not in JSON format:', plan);
+                parsedPlan = {
+                    businessType: 'Unnamed Plan',
+                    location: 'Unknown Location',
+                    dateCreated: new Date().toISOString(),
+                    content: plan
+                };
+            }
+            const planElement = document.createElement('div');
+            planElement.className = 'bg-white rounded-lg shadow-md p-4 mb-4';
+            planElement.innerHTML = `
+                <h4 class="font-bold text-lg mb-2">${parsedPlan.businessType || 'Unnamed Plan'}</h4>
+                <p class="text-sm text-gray-600 mb-2">Created on: ${new Date(parsedPlan.dateCreated).toLocaleDateString()}</p>
+                <p class="text-sm mb-2">Location: ${parsedPlan.location || 'Unknown Location'}</p>
+                <button onclick="expandPlan(${index})" class="mt-2 text-blue-500 hover:text-blue-700">View Full Plan</button>
+                <button onclick="deletePlan(${index})" class="mt-2 ml-2 text-red-500 hover:text-red-700">Delete Plan</button>
+            `;
+            savedPlansContainer.appendChild(planElement);
+        });
+    } else {
+        savedPlansContainer.innerHTML = '<p>No saved plans yet.</p>';
     }
 }
 
@@ -67,7 +78,6 @@ function expandPlan(index) {
         parsedPlan = JSON.parse(plan);
     } catch (error) {
         console.log('Plan is not in JSON format:', plan);
-        // Treat the plan as a simple string
         parsedPlan = {
             businessType: 'Unnamed Plan',
             location: 'Unknown Location',
@@ -107,6 +117,32 @@ function expandPlan(index) {
     document.getElementById('closeModal').onclick = () => modal.remove();
 }
 
+// Function to delete a plan
+async function deletePlan(index) {
+    if (confirm('Are you sure you want to delete this plan?')) {
+        try {
+            const response = await fetch('/api/delete-plan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify({ planIndex: index }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to delete plan');
+            }
+
+            alert('Plan deleted successfully');
+            fetchUserProfile(); // Refresh the profile to show updated list
+        } catch (error) {
+            console.error('Error deleting plan:', error);
+            alert('Failed to delete plan. Please try again later.');
+        }
+    }
+}
+
 // Update UI for logged-in user
 function updateUIForLoggedInUser(username) {
     document.getElementById('usernameDisplay').textContent = `Welcome, ${username}`;
@@ -121,7 +157,6 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
 // Check authentication status on page load
 window.addEventListener('load', function() {
     if (authToken) {
-        // Fetch username from server or decode from token if included
         fetch('/api/get-username', {
             headers: {
                 'Authorization': `Bearer ${authToken}`
