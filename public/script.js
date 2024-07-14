@@ -138,12 +138,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
             try {
                 const sections = businessPlanDiv.querySelectorAll('.section');
-                let fullPlanContent = '';
+                let fullPlanContent = [];
                 sections.forEach(section => {
                     const title = section.querySelector('h3').textContent;
                     const content = section.querySelector('.section-content').textContent;
-                    fullPlanContent += title + '\n' + content + '\n\n';
+                    fullPlanContent.push({ title, content });
                 });
+
+                const planToSave = {
+                    businessType: businessTypeInput.value,
+                    location: locationInput.value,
+                    dateCreated: new Date().toISOString(),
+                    sections: fullPlanContent
+                };
 
                 const response = await fetch('/api/save-plan', {
                     method: 'POST',
@@ -151,11 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${authToken}`
                     },
-                    body: JSON.stringify({
-                        planContent: fullPlanContent,
-                        businessType: businessTypeInput.value,
-                        location: locationInput.value
-                    }),
+                    body: JSON.stringify(planToSave),
                 });
 
                 if (!response.ok) {
@@ -530,21 +533,21 @@ document.addEventListener('DOMContentLoaded', function() {
             data.savedPlans.forEach((plan, index) => {
                 let parsedPlan;
                 try {
-                    parsedPlan = JSON.parse(plan);
+                    parsedPlan = typeof plan === 'string' ? JSON.parse(plan) : plan;
                 } catch (error) {
-                    console.log('Plan is not in JSON format:', plan);
+                    console.error('Error parsing plan:', error);
                     parsedPlan = {
                         businessType: 'Unnamed Plan',
                         location: 'Unknown Location',
                         dateCreated: new Date().toISOString(),
-                        content: plan
+                        content: 'Plan details not available'
                     };
                 }
                 const planElement = document.createElement('div');
                 planElement.className = 'bg-white rounded-lg shadow-md p-4 mb-4';
                 planElement.innerHTML = `
                     <h4 class="font-bold text-lg mb-2">${parsedPlan.businessType || 'Unnamed Plan'}</h4>
-                    <p class="text-sm text-gray-600 mb-2">Created on: ${new Date(parsedPlan.dateCreated).toLocaleDateString()}</p>
+                    <p class="text-sm text-gray-600 mb-2">Created on: ${new Date(parsedPlan.dateCreated || Date.now()).toLocaleDateString()}</p>
                     <p class="text-sm mb-2">Location: ${parsedPlan.location || 'Unknown Location'}</p>
                     <button onclick="expandPlan(${index})" class="mt-2 text-blue-500 hover:text-blue-700">View Full Plan</button>
                     <button onclick="deletePlan(${index})" class="mt-2 ml-2 text-red-500 hover:text-red-700">Delete Plan</button>
@@ -562,16 +565,18 @@ document.addEventListener('DOMContentLoaded', function() {
         let parsedPlan;
         
         try {
-            parsedPlan = JSON.parse(plan);
+            parsedPlan = typeof plan === 'string' ? JSON.parse(plan) : plan;
         } catch (error) {
-            console.log('Plan is not in JSON format:', plan);
+            console.error('Error parsing plan:', error);
             parsedPlan = {
                 businessType: 'Unnamed Plan',
                 location: 'Unknown Location',
                 dateCreated: new Date().toISOString(),
-                content: plan
+                content: 'Plan details not available'
             };
         }
+        
+        console.log('Saved plan:', parsedPlan); // Debugging line
         
         const modal = document.createElement('div');
         modal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full';
@@ -579,16 +584,18 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 shadow-lg rounded-md bg-white">
                 <div class="mt-3 text-center">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">${parsedPlan.businessType || 'Unnamed Plan'}</h3>
+                    <p class="text-sm text-gray-600 mb-2">Created on: ${new Date(parsedPlan.dateCreated || Date.now()).toLocaleDateString()}</p>
+                    <p class="text-sm mb-2">Location: ${parsedPlan.location || 'Unknown Location'}</p>
                     <div class="mt-2 px-7 py-3 text-left">
                         ${parsedPlan.sections ? 
                             parsedPlan.sections.map(section => `
                                 <div class="mb-4">
-                                    <h4 class="font-bold">${section.title}</h4>
-                                    <p class="text-sm whitespace-pre-wrap">${section.content}</p>
+                                    <h4 class="font-bold">${section.title || 'Untitled Section'}</h4>
+                                    <p class="text-sm whitespace-pre-wrap">${section.content || 'No content available'}</p>
                                 </div>
                             `).join('') 
                             : 
-                            `<p class="text-sm whitespace-pre-wrap">${parsedPlan.content}</p>`
+                            `<p class="text-sm whitespace-pre-wrap">${parsedPlan.content || 'Plan details not available'}</p>`
                         }
                     </div>
                     <div class="items-center px-4 py-3">
