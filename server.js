@@ -115,7 +115,7 @@ app.post('/api/generate-plan', authenticateToken, async (req, res) => {
 Each section should be comprehensive, specific, and provide actionable content relevant to the business idea. Include realistic financial projections with numbers where applicable. Ensure that the plan is tailored to a ${businessIdea} in ${location}.`;
 
     const completion = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4",
       messages: [{ role: "user", content: prompt }],
     });
 
@@ -136,7 +136,7 @@ app.post('/api/expand-section', authenticateToken, async (req, res) => {
     const prompt = `Expand in detail on the section titled "${sectionTitle}" for a business plan of a ${businessIdea} in ${location}. Provide a comprehensive overview with specific and actionable content. Include financial projections with realistic numbers and detailed explanations of costs, revenues, and other financial considerations where relevant.`;
 
     const completion = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4",
       messages: [{ role: "user", content: prompt }],
     });
 
@@ -157,7 +157,7 @@ app.post('/api/chat', authenticateToken, async (req, res) => {
     const prompt = `Given the following business plan context:\n\n${context}\n\nAnswer the following question:\n${question}\n\nProvide a detailed and helpful response, using specific information from the business plan where relevant.`;
     
     const completion = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4",
       messages: [{ role: "user", content: prompt }],
     });
 
@@ -291,13 +291,17 @@ app.post('/api/delete-plan', authenticateToken, async (req, res) => {
 });
 
 // Serve profile.html
-app.get('/profile.html', (req, res) => {
+app.get('/profile.html', authenticateToken, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'profile.html'));
 });
 
 // Catch-all route to serve index.html for any unmatched routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    if (req.path !== '/' && !req.path.includes('.')) {
+        res.redirect('/');
+    } else {
+        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    }
 });
 
 // Error handling middleware
