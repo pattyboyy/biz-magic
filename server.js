@@ -9,6 +9,16 @@ const jwt = require('jsonwebtoken');
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Middleware
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
+});
+
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('Connected to MongoDB'))
@@ -26,16 +36,6 @@ const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
-
-// Middleware
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Logging middleware
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-  next();
-});
 
 // Authentication middleware
 const authenticateToken = (req, res, next) => {
@@ -62,12 +62,20 @@ function handleApiError(res, error, customMessage) {
 // User registration
 app.post('/api/register', async (req, res) => {
   try {
+    console.log('Registration attempt:', req.body.email);
     const { email, password } = req.body;
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      console.log('Registration failed: Email already exists', email);
+      return res.status(400).json({ error: 'Email already exists' });
+    }
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({ email, password: hashedPassword });
     await user.save();
+    console.log('User registered successfully:', email);
     res.status(201).json({ message: 'User registered successfully' });
   } catch (error) {
+    console.error('Registration error:', error);
     handleApiError(res, error, 'Error registering user');
   }
 });
@@ -75,15 +83,23 @@ app.post('/api/register', async (req, res) => {
 // User login
 app.post('/api/login', async (req, res) => {
   try {
+    console.log('Login attempt:', req.body.email);
     const { email, password } = req.body;
     const user = await User.findOne({ email });
-    if (user && await bcrypt.compare(password, user.password)) {
-      const token = jwt.sign({ userId: user._id, username: email.split('@')[0] }, process.env.JWT_SECRET, { expiresIn: '1h' });
-      res.json({ token, username: email.split('@')[0] });
-    } else {
-      res.status(400).json({ error: 'Invalid credentials' });
+    if (!user) {
+      console.log('Login failed: User not found', email);
+      return res.status(400).json({ error: 'Invalid credentials' });
     }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      console.log('Login failed: Invalid password', email);
+      return res.status(400).json({ error: 'Invalid credentials' });
+    }
+    const token = jwt.sign({ userId: user._id, username: email.split('@')[0] }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    console.log('Login successful:', email);
+    res.json({ token, username: email.split('@')[0] });
   } catch (error) {
+    console.error('Login error:', error);
     handleApiError(res, error, 'Error logging in');
   }
 });
@@ -119,10 +135,10 @@ Each section should be comprehensive, specific, and provide actionable content r
       messages: [{ role: "user", content: prompt }],
     });
 
-    console.log('OpenAI API response:', completion.data);
-
+    console.log('OpenAI API response received');
     res.json({ businessPlan: completion.data.choices[0].message.content });
   } catch (error) {
+    console.error('Error generating business plan:', error);
     handleApiError(res, error, 'Error generating business plan');
   }
 });
@@ -140,10 +156,10 @@ app.post('/api/expand-section', authenticateToken, async (req, res) => {
       messages: [{ role: "user", content: prompt }],
     });
 
-    console.log('OpenAI API response:', completion.data);
-
+    console.log('OpenAI API response received for section expansion');
     res.json({ expandedContent: completion.data.choices[0].message.content });
   } catch (error) {
+    console.error('Error expanding section:', error);
     handleApiError(res, error, 'Error expanding section');
   }
 });
@@ -161,58 +177,34 @@ app.post('/api/chat', authenticateToken, async (req, res) => {
       messages: [{ role: "user", content: prompt }],
     });
 
-    console.log('OpenAI API response:', completion.data);
-
+    console.log('OpenAI API response received for chat');
     res.json({ answer: completion.data.choices[0].message.content });
   } catch (error) {
+    console.error('Error processing chat question:', error);
     handleApiError(res, error, 'Error processing chat question');
   }
 });
 
 // Trending business ideas
 app.get('/api/trending-ideas', async (req, res) => {
-    try {
-      const trendingIdeas = [
-        "Eco-friendly Product Store",
-        "Virtual Reality Arcade",
-        "Artisanal Coffee Roastery",
-        "Tech Education for Seniors",
-        "Personalized Nutrition Plans",
-        "Sustainable Fashion Brand",
-        "Smart Home Installation Service",
-        "Urban Vertical Farming",
-        "AI-powered Personal Shopping",
-        "Mindfulness and Meditation App",
-        "Electric Vehicle Charging Stations",
-        "Drone Photography and Videography",
-        "Pet Wellness and Holistic Care",
-        "Upcycled Furniture Workshop",
-        "Virtual Interior Design Service",
-        "Subscription-based Meal Prep",
-        "Augmented Reality Tour Guide",
-        "Sustainable Packaging Solutions",
-        "Esports Training Academy",
-        "Tiny House Construction",
-        "Biohacking and Wellness Center",
-        "Robotic Pet Sitting Service",
-        "Zero-waste Grocery Store",
-        "Virtual Team Building Experiences",
-        "3D Printed Custom Prosthetics",
-        "Eco-friendly Travel Agency",
-        "Cryptocurrency Education Platform",
-        "Plant-based Meat Alternatives",
-        "Virtual Reality Fitness Classes",
-        "Sustainable Beauty and Skincare Line"
-      ];
-      res.json({ trendingIdeas });
-    } catch (error) {
-      handleApiError(res, error, 'Error fetching trending ideas');
-    }
-  });
-
-// Test route
-app.get('/api/test', (req, res) => {
-  res.json({ message: 'Server is running' });
+  try {
+    const trendingIdeas = [
+      "Eco-friendly Product Store",
+      "Virtual Reality Arcade",
+      "Artisanal Coffee Roastery",
+      "Tech Education for Seniors",
+      "Personalized Nutrition Plans",
+      "Sustainable Fashion Brand",
+      "Smart Home Installation Service",
+      "Urban Vertical Farming",
+      "AI-powered Personal Shopping",
+      "Mindfulness and Meditation App"
+    ];
+    res.json({ trendingIdeas });
+  } catch (error) {
+    console.error('Error fetching trending ideas:', error);
+    handleApiError(res, error, 'Error fetching trending ideas');
+  }
 });
 
 // Fetch username
@@ -224,84 +216,76 @@ app.get('/api/get-username', authenticateToken, async (req, res) => {
     }
     res.json({ username: user.email.split('@')[0] });
   } catch (error) {
+    console.error('Error fetching username:', error);
     handleApiError(res, error, 'Error fetching username');
   }
 });
 
 // Save business plan (protected route)
 app.post('/api/save-plan', authenticateToken, async (req, res) => {
-    try {
-        const user = await User.findById(req.user.userId);
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-        const { planContent, businessType, location } = req.body;
-        
-        // Structure the plan content
-        const structuredPlan = {
-            businessType,
-            location,
-            dateCreated: new Date().toISOString(),
-            sections: planContent.split('\n\n').map(section => {
-                const [title, ...content] = section.split('\n');
-                return { title: title.trim(), content: content.join('\n').trim() };
-            })
-        };
-        
-        user.savedPlans.push(JSON.stringify(structuredPlan));
-        await user.save();
-        res.status(200).json({ message: 'Business plan saved successfully' });
-    } catch (error) {
-        handleApiError(res, error, 'Error saving business plan');
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
     }
+    const { planContent } = req.body;
+    
+    console.log('Received plan content:', planContent); // Debugging line
+    
+    if (!planContent || typeof planContent !== 'object') {
+      return res.status(400).json({ error: 'Invalid plan content' });
+    }
+
+    user.savedPlans.push(JSON.stringify(planContent));
+    await user.save();
+    console.log('Business plan saved successfully for user:', user.email);
+    res.status(200).json({ message: 'Business plan saved successfully' });
+  } catch (error) {
+    console.error('Error saving business plan:', error);
+    handleApiError(res, error, 'Error saving business plan');
+  }
 });
 
 // Fetch user profile (protected route)
 app.get('/api/profile', authenticateToken, async (req, res) => {
-    try {
-        const user = await User.findById(req.user.userId);
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-        res.json({ email: user.email, savedPlans: user.savedPlans });
-    } catch (error) {
-        handleApiError(res, error, 'Error fetching profile');
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
     }
+    res.json({ email: user.email, savedPlans: user.savedPlans });
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    handleApiError(res, error, 'Error fetching profile');
+  }
 });
 
 // Delete business plan (protected route)
 app.post('/api/delete-plan', authenticateToken, async (req, res) => {
-    try {
-        const user = await User.findById(req.user.userId);
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-        const { planIndex } = req.body;
-        
-        if (planIndex < 0 || planIndex >= user.savedPlans.length) {
-            return res.status(400).json({ error: 'Invalid plan index' });
-        }
-        
-        user.savedPlans.splice(planIndex, 1);
-        await user.save();
-        res.status(200).json({ message: 'Business plan deleted successfully' });
-    } catch (error) {
-        handleApiError(res, error, 'Error deleting business plan');
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
     }
-});
-
-// Serve profile.html
-app.get('/profile.html', authenticateToken, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'profile.html'));
+    const { planIndex } = req.body;
+    
+    if (planIndex < 0 || planIndex >= user.savedPlans.length) {
+      return res.status(400).json({ error: 'Invalid plan index' });
+    }
+    
+    user.savedPlans.splice(planIndex, 1);
+    await user.save();
+    console.log('Business plan deleted successfully for user:', user.email);
+    res.status(200).json({ message: 'Business plan deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting business plan:', error);
+    handleApiError(res, error, 'Error deleting business plan');
+  }
 });
 
 // Catch-all route to serve index.html for any unmatched routes
 app.get('*', (req, res) => {
-    if (req.path !== '/' && !req.path.includes('.')) {
-        res.redirect('/');
-    } else {
-        res.sendFile(path.join(__dirname, 'public', 'index.html'));
-    }
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Error handling middleware

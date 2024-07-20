@@ -24,16 +24,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // Close button functionality
     Array.from(closeBtns).forEach(btn => {
         btn.onclick = function() {
-            btn.closest('.modal').style.display = "none";
+            const modal = btn.closest('.modal');
+            if (modal) {
+                modal.style.display = "none";
+            } else {
+                console.warn('Modal not found for this close button');
+            }
         }
     });
 
     // Close modal when clicking outside
     window.onclick = function(event) {
-        if (event.target == loginModal) {
+        if (loginModal && event.target == loginModal) {
             loginModal.style.display = "none";
         }
-        if (event.target == registerModal) {
+        if (registerModal && event.target == registerModal) {
             registerModal.style.display = "none";
         }
     }
@@ -152,19 +157,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     sections: fullPlanContent
                 };
 
+                console.log('Plan to save:', planToSave); // Debugging line
+
                 const response = await fetch('/api/save-plan', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${authToken}`
                     },
-                    body: JSON.stringify(planToSave),
+                    body: JSON.stringify({ planContent: planToSave }),
                 });
 
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(errorData.error || 'Failed to save entire plan');
                 }
+
+                const responseData = await response.json();
+                console.log('Server response:', responseData); // Debugging line
 
                 alert('Entire business plan saved successfully!');
             } catch (error) {
@@ -174,7 +184,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Expand section functionality
+    // Expand section functionality with visualizations
     function addLearnMoreFunctionality() {
         const sections = businessPlanDiv.querySelectorAll('div.section');
         sections.forEach(section => {
@@ -203,6 +213,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     const data = await response.json();
                     section.querySelector('.section-content').innerHTML = data.expandedContent;
+                    
+                    // Generate and add visualizations
+                    const visualizations = generateVisualizations(data.expandedContent, sectionTitle);
+                    if (visualizations.length > 0) {
+                        const visualizationContainer = document.createElement('div');
+                        visualizationContainer.className = 'visualization-container mt-4';
+                        visualizations.forEach(viz => {
+                            visualizationContainer.appendChild(viz);
+                        });
+                        section.appendChild(visualizationContainer);
+                    }
+                    
                     learnMoreBtn.style.display = 'none'; // Hide the button after expanding
                 } catch (error) {
                     console.error('Error expanding section:', error);
@@ -210,6 +232,101 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
+    }
+
+    function generateVisualizations(content, sectionTitle) {
+        const visualizations = [];
+        
+        // Extract numerical data from the content
+        const numbers = content.match(/\d+(\.\d+)?/g);
+        if (numbers && numbers.length > 1) {
+            // Create a bar chart
+            const barChartContainer = document.createElement('div');
+            barChartContainer.style.width = '100%';
+            barChartContainer.style.height = '300px';
+            
+            const barChart = new Chart(barChartContainer, {
+                type: 'bar',
+                data: {
+                    labels: numbers.map((_, index) => `Data ${index + 1}`),
+                    datasets: [{
+                        label: 'Numerical Data',
+                        data: numbers.map(Number),
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    title: {
+                        display: true,
+                        text: `${sectionTitle} - Data Visualization`
+                    },
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero: true
+                            }
+                        }]
+                    }
+                }
+            });
+            
+            visualizations.push(barChartContainer);
+        }
+        
+        // Add more visualization types based on the content and section title
+        if (sectionTitle.toLowerCase().includes('financial') || sectionTitle.toLowerCase().includes('projection')) {
+            // Create a line chart for financial projections
+            const lineChartContainer = document.createElement('div');
+            lineChartContainer.style.width = '100%';
+            lineChartContainer.style.height = '300px';
+            
+            const projectionData = extractProjectionData(content);
+            const lineChart = new Chart(lineChartContainer, {
+                type: 'line',
+                data: {
+                    labels: projectionData.labels,
+                    datasets: [{
+                        label: 'Financial Projection',
+                        data: projectionData.data,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    title: {
+                        display: true,
+                        text: 'Financial Projections'
+                    },
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero: true
+                            }
+                        }]
+                    }
+                }
+            });
+            
+            visualizations.push(lineChartContainer);
+        }
+        
+        return visualizations;
+    }
+
+    function extractProjectionData(content) {
+        // This is a simplified example. You may need to adjust this based on the actual content structure.
+        const yearsRegex = /Year (\d+)[\s\S]*?(\$[\d,]+)/g;
+        const matches = [...content.matchAll(yearsRegex)];
+        
+        return {
+            labels: matches.map(match => `Year ${match[1]}`),
+            data: matches.map(match => parseFloat(match[2].replace('$', '').replace(',', '')))
+        };
     }
 
     // Chat Functionality
@@ -490,151 +607,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Call checkAuthStatus on page load
     checkAuthStatus();
-
-    // Profile page functionality
-    const profileContent = document.getElementById('profileContent');
-
-    async function fetchUserProfile() {
-        try {
-            const response = await fetch('/api/profile', {
-                headers: {
-                    'Authorization': `Bearer ${authToken}`
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch profile');
-            }
-
-            const data = await response.json();
-            displayUserProfile(data);
-        } catch (error) {
-            console.error('Error fetching profile:', error);
-            alert('Failed to load profile. Please try again later.');
-        }
-    }
-
-    function displayUserProfile(data) {
-        if (!profileContent) return;
-
-        profileContent.innerHTML = `
-            <div class="border-b pb-4">
-                <h2 class="text-xl font-semibold mb-2">Account Information</h2>
-                <p>Email: ${data.email}</p>
-            </div>
-            <div>
-                <h2 class="text-xl font-semibold mb-4">Saved Business Plans</h2>
-                <div id="savedPlans" class="space-y-4"></div>
-            </div>
-        `;
-
-        const savedPlansContainer = document.getElementById('savedPlans');
-        if (data.savedPlans && data.savedPlans.length > 0) {
-            data.savedPlans.forEach((plan, index) => {
-                let parsedPlan;
-                try {
-                    parsedPlan = typeof plan === 'string' ? JSON.parse(plan) : plan;
-                } catch (error) {
-                    console.error('Error parsing plan:', error);
-                    parsedPlan = {
-                        businessType: 'Unnamed Plan',
-                        location: 'Unknown Location',
-                        dateCreated: new Date().toISOString(),
-                        content: 'Plan details not available'
-                    };
-                }
-                const planElement = document.createElement('div');
-                planElement.className = 'bg-white rounded-lg shadow-md p-4 mb-4';
-                planElement.innerHTML = `
-                    <h4 class="font-bold text-lg mb-2">${parsedPlan.businessType || 'Unnamed Plan'}</h4>
-                    <p class="text-sm text-gray-600 mb-2">Created on: ${new Date(parsedPlan.dateCreated || Date.now()).toLocaleDateString()}</p>
-                    <p class="text-sm mb-2">Location: ${parsedPlan.location || 'Unknown Location'}</p>
-                    <button onclick="expandPlan(${index})" class="mt-2 text-blue-500 hover:text-blue-700">View Full Plan</button>
-                    <button onclick="deletePlan(${index})" class="mt-2 ml-2 text-red-500 hover:text-red-700">Delete Plan</button>
-                `;
-                savedPlansContainer.appendChild(planElement);
-            });
-        } else {
-            savedPlansContainer.innerHTML = '<p>No saved plans yet.</p>';
-        }
-    }
-
-    window.expandPlan = function(index) {
-        const plans = JSON.parse(localStorage.getItem('savedPlans') || '[]');
-        let plan = plans[index];
-        let parsedPlan;
-        
-        try {
-            parsedPlan = typeof plan === 'string' ? JSON.parse(plan) : plan;
-        } catch (error) {
-            console.error('Error parsing plan:', error);
-            parsedPlan = {
-                businessType: 'Unnamed Plan',
-                location: 'Unknown Location',
-                dateCreated: new Date().toISOString(),
-                content: 'Plan details not available'
-            };
-        }
-        
-        console.log('Saved plan:', parsedPlan); // Debugging line
-        
-        const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full';
-        modal.innerHTML = `
-            <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 shadow-lg rounded-md bg-white">
-                <div class="mt-3 text-center">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">${parsedPlan.businessType || 'Unnamed Plan'}</h3>
-                    <p class="text-sm text-gray-600 mb-2">Created on: ${new Date(parsedPlan.dateCreated || Date.now()).toLocaleDateString()}</p>
-                    <p class="text-sm mb-2">Location: ${parsedPlan.location || 'Unknown Location'}</p>
-                    <div class="mt-2 px-7 py-3 text-left">
-                        ${parsedPlan.sections ? 
-                            parsedPlan.sections.map(section => `
-                                <div class="mb-4">
-                                    <h4 class="font-bold">${section.title || 'Untitled Section'}</h4>
-                                    <p class="text-sm whitespace-pre-wrap">${section.content || 'No content available'}</p>
-                                </div>
-                            `).join('') 
-                            : 
-                            `<p class="text-sm whitespace-pre-wrap">${parsedPlan.content || 'Plan details not available'}</p>`
-                        }
-                    </div>
-                    <div class="items-center px-4 py-3">
-                        <button id="closeModal" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
-                            Close
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        document.getElementById('closeModal').onclick = () => modal.remove();
-    }
-
-    window.deletePlan = async function(index) {
-        if (confirm('Are you sure you want to delete this plan?')) {
-            try {
-                const response = await fetch('/api/delete-plan', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${authToken}`
-                    },
-                    body: JSON.stringify({ planIndex: index }),
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to delete plan');
-                }
-
-                alert('Plan deleted successfully');
-                fetchUserProfile(); // Refresh the profile to show updated list
-            } catch (error) {
-                console.error('Error deleting plan:', error);
-                alert('Failed to delete plan. Please try again later.');
-            }
-        }
-    }
 
     // Initial UI update based on authentication status
     checkAuthStatus();
