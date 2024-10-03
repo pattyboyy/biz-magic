@@ -152,7 +152,7 @@ app.post('/api/expand-section', authenticateToken, async (req, res) => {
     const prompt = `Expand in detail on the section titled "${sectionTitle}" for a business plan of a ${businessIdea} in ${location}. Provide a comprehensive overview with specific and actionable content. Include financial projections with realistic numbers and detailed explanations of costs, revenues, and other financial considerations where relevant.`;
 
     const completion = await openai.createChatCompletion({
-      model: "gpt-4",
+      model: "gpt-4o",
       messages: [{ role: "user", content: prompt }],
     });
 
